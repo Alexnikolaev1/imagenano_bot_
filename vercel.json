@@ -1,5 +1,15 @@
 {
   "version": 2,
+  "routes": [
+    {
+      "src": "/api/telegram",
+      "dest": "/api/telegram.ts"
+    },
+    {
+      "src": "/",
+      "dest": "/api/telegram.ts"
+    }
+  ],
   "functions": {
     "api/telegram.ts": {
       "maxDuration": 60
