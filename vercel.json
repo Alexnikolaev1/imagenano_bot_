@@ -1,17 +1,4 @@
 {
-  "version": 2,
-  "framework": null,
-  "outputDirectory": ".",
-  "routes": [
-    {
-      "src": "/api/telegram",
-      "dest": "/api/telegram.ts"
-    },
-    {
-      "src": "/",
-      "dest": "/api/telegram.ts"
-    }
-  ],
   "functions": {
     "api/telegram.ts": {
       "maxDuration": 60
