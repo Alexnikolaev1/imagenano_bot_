@@ -29,18 +29,22 @@ export function registerGenerateHandlers(bot: Bot<AppContext>): void {
     const statusMsg = await ctx.reply(ctx.t('generating'), { parse_mode: 'HTML' });
     logInfo('Generate command', { userId, prompt: rawPrompt.slice(0, 80) });
 
-    runImageJob({
-      chatId,
-      statusMessageId: statusMsg.message_id,
-      userId,
-      type: 'generate',
-      prompt: rawPrompt,
-      styleKey,
-      lang,
-      enhance: ctx.config.enhancePrompts,
-      imageService: ctx.imageService,
-      enhancer: ctx.imageService.getEnhancer(),
-      t: ctx.t,
-    }).catch((err) => logError('Generate job failed', err));
+    try {
+      await runImageJob({
+        chatId,
+        statusMessageId: statusMsg.message_id,
+        userId,
+        type: 'generate',
+        prompt: rawPrompt,
+        styleKey,
+        lang,
+        enhance: ctx.config.enhancePrompts,
+        imageService: ctx.imageService,
+        enhancer: ctx.imageService.getEnhancer(),
+        t: ctx.t,
+      });
+    } catch (err) {
+      logError('Generate job failed', err);
+    }
   });
 }

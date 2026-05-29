@@ -80,19 +80,23 @@ export function registerCallbackHandlers(bot: Bot<AppContext>): void {
       await ctx.answerCallbackQuery({ text: '🔄' });
       const statusMsg = await ctx.reply(ctx.t('regenerate'));
 
-      runImageJob({
-        chatId,
-        statusMessageId: statusMsg.message_id,
-        userId,
-        type: 'generate',
-        prompt,
-        styleKey: getUserStyle(userId),
-        lang,
-        enhance: ctx.config.enhancePrompts,
-        imageService: ctx.imageService,
-        enhancer: ctx.imageService.getEnhancer(),
-        t: ctx.t,
-      }).catch((err) => logError('Regen job failed', err));
+      try {
+        await runImageJob({
+          chatId,
+          statusMessageId: statusMsg.message_id,
+          userId,
+          type: 'generate',
+          prompt,
+          styleKey: getUserStyle(userId),
+          lang,
+          enhance: ctx.config.enhancePrompts,
+          imageService: ctx.imageService,
+          enhancer: ctx.imageService.getEnhancer(),
+          t: ctx.t,
+        });
+      } catch (err) {
+        logError('Regen job failed', err);
+      }
       return;
     }
 

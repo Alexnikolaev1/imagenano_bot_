@@ -53,7 +53,7 @@ export class ImageService {
           Authorization: `Bearer ${this.apiToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: prompt.slice(0, 2048), steps: 6 }),
+        body: JSON.stringify({ prompt: prompt.slice(0, 2048), steps: 4 }),
       });
 
       if (!res.ok) {

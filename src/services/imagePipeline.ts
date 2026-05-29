@@ -57,7 +57,7 @@ export async function runImageJob(params: ImageJobParams): Promise<void> {
       prompt = applyStyleToPrompt(prompt, params.styleKey);
 
       if (enhance && enhancer && prompt.length < 280) {
-        const enhanced = await enhancer.enhance(prompt, lang);
+        const enhanced = await withTimeout(enhancer.enhance(prompt, lang), 4_000, prompt);
         if (enhanced !== prompt) {
           prompt = enhanced;
         }
@@ -111,7 +111,18 @@ export async function runImageJob(params: ImageJobParams): Promise<void> {
     const regenId = displayPrompt ? storePrompt(userId, displayPrompt) : undefined;
     const keyboard = buildResultKeyboard(regenId);
 
-    await sendPhoto(chatId, result.imageData, result.mimeType || 'image/png', caption, keyboard);
+    logInfo('Sending photo to Telegram', {
+      userId,
+      bytes: Math.round((result.imageData.length * 3) / 4),
+    });
+    const sent = await sendPhoto(
+      chatId,
+      result.imageData,
+      result.mimeType || 'image/jpeg',
+      caption,
+      keyboard
+    );
+    logInfo('Photo sent to Telegram', { userId, messageId: sent.message_id });
     await editMessage(chatId, statusMessageId, t('imageSent'));
   } catch (err) {
     logError('runImageJob failed', err);
@@ -122,4 +133,11 @@ export async function runImageJob(params: ImageJobParams): Promise<void> {
       { parse_mode: 'HTML' }
     ).catch(() => undefined);
   }
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
 }

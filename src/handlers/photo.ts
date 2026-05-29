@@ -63,16 +63,20 @@ async function handlePhotoMessage(ctx: AppContext, overrideFileId?: string): Pro
 
   const jobType = isVariation ? 'variation' : 'edit';
 
-  runImageJob({
-    chatId,
-    statusMessageId: statusMsg.message_id,
-    userId,
-    type: jobType,
-    fileId,
-    instruction,
-    lang,
-    enhance: false,
-    imageService: ctx.imageService,
-    t: ctx.t,
-  }).catch((err) => logError('Photo job failed', err));
+  try {
+    await runImageJob({
+      chatId,
+      statusMessageId: statusMsg.message_id,
+      userId,
+      type: jobType,
+      fileId,
+      instruction,
+      lang,
+      enhance: false,
+      imageService: ctx.imageService,
+      t: ctx.t,
+    });
+  } catch (err) {
+    logError('Photo job failed', err);
+  }
 }

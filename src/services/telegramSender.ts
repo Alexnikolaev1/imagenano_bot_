@@ -4,6 +4,7 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { dataFile } from '../utils/paths';
+import { logError } from '../utils/logger';
 
 const BASE_URL = 'https://api.telegram.org';
 
@@ -60,7 +61,11 @@ export async function sendPhoto(
   const tmpPath = dataFile(filename);
 
   try {
-    const buffer = Buffer.from(imageBase64, 'base64');
+    const normalized = normalizeBase64(imageBase64);
+    const buffer = Buffer.from(normalized, 'base64');
+    if (buffer.length === 0) {
+      throw new Error('Decoded image buffer is empty');
+    }
     fs.writeFileSync(tmpPath, buffer);
 
     const result = await sendPhotoFile(chatId, tmpPath, filename, mimeType, caption, replyMarkup);
@@ -140,7 +145,12 @@ function sendPhotoFile(
           if (parsed.ok) {
             resolve(parsed.result);
           } else {
-            reject(new Error(`Telegram sendPhoto error: ${parsed.description}`));
+            const err = new Error(`Telegram sendPhoto error: ${parsed.description}`);
+            logError('sendPhoto rejected by Telegram', {
+              description: parsed.description,
+              errorCode: parsed.error_code,
+            });
+            reject(err);
           }
         } catch {
           reject(new Error('Failed to parse sendPhoto response'));
@@ -148,10 +158,20 @@ function sendPhotoFile(
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (err) => {
+      logError('sendPhoto network error', err);
+      reject(err);
+    });
     req.write(body);
     req.end();
   });
+}
+
+function normalizeBase64(raw: string): string {
+  const trimmed = raw.trim();
+  const marker = 'base64,';
+  const idx = trimmed.indexOf(marker);
+  return idx >= 0 ? trimmed.slice(idx + marker.length) : trimmed;
 }
 
 function apiRequest<T = { message_id: number }>(endpoint: string, body: string): Promise<T> {

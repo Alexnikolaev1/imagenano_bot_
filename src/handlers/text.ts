@@ -37,18 +37,22 @@ export function registerTextHandlers(bot: Bot<AppContext>): void {
     const statusMsg = await ctx.reply(ctx.t('generating'), { parse_mode: 'HTML' });
     logInfo('Text generate', { userId, prompt: text.slice(0, 80) });
 
-    runImageJob({
-      chatId,
-      statusMessageId: statusMsg.message_id,
-      userId,
-      type: 'generate',
-      prompt: text,
-      styleKey,
-      lang,
-      enhance: ctx.config.enhancePrompts,
-      imageService: ctx.imageService,
-      enhancer: ctx.imageService.getEnhancer(),
-      t: ctx.t,
-    }).catch((err) => logError('Text generate job failed', err));
+    try {
+      await runImageJob({
+        chatId,
+        statusMessageId: statusMsg.message_id,
+        userId,
+        type: 'generate',
+        prompt: text,
+        styleKey,
+        lang,
+        enhance: ctx.config.enhancePrompts,
+        imageService: ctx.imageService,
+        enhancer: ctx.imageService.getEnhancer(),
+        t: ctx.t,
+      });
+    } catch (err) {
+      logError('Text generate job failed', err);
+    }
   });
 }
