@@ -8,6 +8,8 @@ import { logError, logInfo } from '../utils/logger';
 const MENU_BUTTONS = new Set([
   '🎨 Сгенерировать',
   '🎨 Generate',
+  '🎬 Видео',
+  '🎬 Video',
   '🎭 Стиль',
   '🎭 Style',
   '📊 Статистика',

@@ -12,6 +12,25 @@ export interface GenerationResult {
   error?: string;
 }
 
+export interface VideoResult {
+  success: boolean;
+  /** Real MP4 URL from a video API */
+  videoUrl?: string;
+  /** Cloudflare preview mode — cinematic still instead of motion video */
+  mode?: 'video' | 'preview' | 'gif';
+  imageBase64?: string;
+  mimeType?: string;
+  error?: string;
+}
+
+export interface MusicResult {
+  success: boolean;
+  audioUrl?: string;
+  audioBase64?: string;
+  mimeType?: string;
+  error?: string;
+}
+
 export interface BotConfig {
   telegramToken: string;
   googleApiKey: string;

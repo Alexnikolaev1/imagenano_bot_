@@ -61,6 +61,8 @@ export function registerStartHandlers(bot: Bot<AppContext>): void {
       const isRu = lang === 'ru';
       await ctx.api.setMyCommands([
         { command: 'generate', description: isRu ? 'Сгенерировать изображение' : 'Generate an image' },
+        { command: 'video', description: isRu ? 'Видео из текста' : 'Text to video' },
+        { command: 'music', description: isRu ? 'Музыка из текста' : 'Text to music' },
         { command: 'style', description: isRu ? 'Художественный стиль' : 'Art style preset' },
         { command: 'stats', description: isRu ? 'Лимит на сегодня' : 'Usage stats' },
         { command: 'lang', description: isRu ? 'Язык интерфейса' : 'Interface language' },

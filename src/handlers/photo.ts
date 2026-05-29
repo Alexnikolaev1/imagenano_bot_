@@ -30,6 +30,8 @@ async function handlePhotoMessage(ctx: AppContext, overrideFileId?: string): Pro
   if (!message) return;
 
   const caption = message.caption?.trim() || '';
+  if (/^\/video\b/i.test(caption)) return;
+
   const isVariation = /^\/variation\b/i.test(caption) || caption === '/variation';
   const isEdit = /^\/edit\b/i.test(caption);
   const instruction = isEdit

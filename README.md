@@ -1,100 +1,81 @@
-<<<<<<< HEAD
-# imagenano_bot
-Создание изображений вТГ
-=======
 # Imagnano — Telegram AI Image Bot
 
-Telegram-бот для генерации изображений через **Cloudflare Workers AI (Flux Schnell)**, с деплоем на **Vercel** (webhook) или локально (long polling).
-
-## Возможности
-
-- **Генерация** — `/generate …` или просто текст в чат
-- **Стили** — `/style` (фото, аниме, акварель, киберпанк, 3D…)
-- **RU / EN** — `/lang`, автоопределение по языку Telegram
-- **Улучшение промптов** — короткие запросы расширяются через Gemini Flash (опционально, нужен Google-ключ)
-- **Inline mode** — `@botname описание` в любом чате
-- **Лимиты** — N запросов в сутки на пользователя
-
-> Flux Schnell генерирует изображения по тексту. Редактирование фото и вариации (image-to-image) этой моделью не поддерживаются.
-
-## Архитектура
-
-```
-imagnano_bot/
-├── api/telegram.ts              # Vercel webhook
-├── src/
-│   ├── bot.ts                   # Фабрика бота + middleware
-│   ├── config.ts                # Переменные окружения
-│   ├── context.ts               # Типизированный AppContext
-│   ├── handlers/                # Модули по типу событий
-│   │   ├── start.ts
-│   │   ├── commands.ts
-│   │   ├── generate.ts
-│   │   ├── photo.ts
-│   │   ├── callbacks.ts
-│   │   ├── inline.ts
-│   │   └── text.ts
-│   ├── services/
-│   │   ├── imageService.ts      # Cloudflare Workers AI (Flux Schnell)
-│   │   ├── promptEnhancer.ts
-│   │   ├── imagePipeline.ts     # Единый async-пайплайн
-│   │   ├── rateLimitGuard.ts
-│   │   └── telegramSender.ts
-│   ├── storage/
-│   │   ├── userPrefs.ts         # Язык и стиль
-│   │   └── promptStore.ts       # ID для кнопки «Перегенерировать»
-│   ├── i18n/                    # ru + en
-│   └── utils/
-└── scripts/setup-webhook.ts
-```
-
-### Ключевые решения
-
-**Webhook + фоновая обработка:** grammY отвечает Telegram сразу (`webhookCallback` с `return`), генерация идёт асинхронно; результат отправляется через `sendPhoto`.
-
-**Кроссплатформенное хранилище:** данные в `os.tmpdir()/imagnano_bot/` (Windows, Vercel `/tmp`).
-
-**Callback_data ≤ 64 байт:** полный промпт хранится в `promptStore`, в кнопке только короткий `regen:<id>`.
+Telegram-бот: **Cloudflare Flux** для картинок, **`/video`** — короткие клипы, **`/music`** — MusicGen через ModelScope.
 
 ## Быстрый старт
 
 ```bash
 cp .env.example .env
-# Заполните TELEGRAM_BOT_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN
-
 npm install
-npm run dev          # long polling локально
+npm run dev
 ```
 
-### Vercel
+Vercel: переменные из `.env.example` → `npx ts-node scripts/setup-webhook.ts`
 
-1. Импортируйте репозиторий в Vercel
-2. Добавьте переменные из `.env.example`
-3. `npx ts-node scripts/setup-webhook.ts`
+## Переменные (минимум)
 
-## Переменные окружения
+| Переменная | Описание |
+|------------|----------|
+| `TELEGRAM_BOT_TOKEN` | @BotFather |
+| `CLOUDFLARE_ACCOUNT_ID` | Workers AI |
+| `CLOUDFLARE_API_TOKEN` | Workers AI |
+| `MAX_REQUESTS_PER_DAY` | Лимит картинок (10) |
+| `MAX_VIDEO_REQUESTS_PER_DAY` | Лимит `/video` (5) |
+| `MODELSCOPE_API_TOKEN` | ms-… token для `/music` и опционально mp4 `/video` |
+| `MAX_MUSIC_REQUESTS_PER_DAY` | Лимит `/music` (5) |
 
-| Переменная | Обязательно | Описание |
-|------------|-------------|----------|
-| `TELEGRAM_BOT_TOKEN` | да | Токен от @BotFather |
-| `CLOUDFLARE_ACCOUNT_ID` | да | Account ID из дашборда Cloudflare |
-| `CLOUDFLARE_API_TOKEN` | да | API-токен с доступом к Workers AI |
-| `CLOUDFLARE_IMAGE_MODEL` | нет | По умолчанию `@cf/black-forest-labs/flux-1-schnell` |
-| `GOOGLE_AI_STUDIO_API_KEY` | нет | Только для улучшения промптов (текст); без него улучшение отключается |
-| `GEMINI_TEXT_MODEL` | нет | По умолчанию `gemini-2.5-flash` |
-| `ENHANCE_PROMPTS` | нет | `false` чтобы отключить улучшение промптов |
-| `ADMIN_CHAT_ID` | нет | Уведомления об ошибках |
-| `MAX_REQUESTS_PER_DAY` | нет | Лимит (по умолчанию 10) |
-| `DEFAULT_LANG` | нет | `ru` или `en` |
+## `/video` — выбранная стратегия (бесплатно каждый день)
 
-## Команды бота
+После изучения документации:
+
+| Вариант | Бесплатно? | Результат |
+|---------|-----------|-----------|
+| **Cloudflare GIF** (по умолчанию) | ✅ 10k neurons/день | 2 кадра Flux → зацикленный GIF |
+| **ModelScope API** (`ms-` token) | ✅ ~2000 вызовов/день | mp4, если модель на API-Inference |
+| **DashScope** | ❌ оплата за секунду | Не используется по умолчанию |
+| **Civision (браузер)** | Magic Cubes/день | Нет REST API для бота |
+
+### Рекомендуемая конфигурация Vercel
+
+**Только бесплатно, без сюрпризов:**
+
+```env
+VIDEO_PROVIDER=cloudflare_gif
+MAX_VIDEO_REQUESTS_PER_DAY=5
+```
+
+**С вашим `ms-` token (сначала mp4, при ошибке — GIF):**
+
+```env
+MODELSCOPE_API_TOKEN=ms-...
+MAX_VIDEO_REQUESTS_PER_DAY=5
+# VIDEO_PROVIDER=modelscope  # опционально, так и так по умолчанию при наличии token
+```
+
+ModelScope video endpoint подтверждён: `POST https://api-inference.modelscope.cn/v1/videos/generations`.  
+Модели Wan на страницах modelscope — не все доступны через API; в коде перебор fallback ID (Wan 2.2 → 2.1).
+
+## `/music` — MusicGen-Small (бесплатно с ms-token)
+
+| Параметр | Значение |
+|----------|----------|
+| Модель | `AI-ModelScope/musicgen-small` |
+| Endpoint | `POST /v1/images/generations` (async) |
+| Длина | ~10 сек WAV |
+| Скорость | ~5–15 сек |
+| Квота ModelScope | ~20–2000 вызовов/день (общий пул API-Inference) |
+
+```env
+MODELSCOPE_API_TOKEN=ms-...
+MAX_MUSIC_REQUESTS_PER_DAY=5
+```
+
+## Команды
 
 | Команда | Описание |
 |---------|----------|
-| `/start` | Приветствие и меню |
-| `/generate` | Генерация по описанию |
-| `/style` | Пресет художественного стиля |
-| `/stats` | Использование лимита |
-| `/lang` | Язык интерфейса |
-| `/help` | Справка |
->>>>>>> b9d4ceb (first take)
+| `/generate` | Картинка из текста |
+| `/video` | Клип из текста |
+| `/music` | Музыка из текста (~10 сек) |
+| Фото + `/video …` | Клип из фото |
+| `/stats` | Лимиты |

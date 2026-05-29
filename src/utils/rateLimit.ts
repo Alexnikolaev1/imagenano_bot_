@@ -26,18 +26,16 @@ function saveLimits(limits: Record<string, UserRateLimit>): void {
   }
 }
 
-export function checkRateLimit(userId: number, maxPerDay: number): {
+function checkRateLimitKeyed(key: string, maxPerDay: number): {
   allowed: boolean;
   remaining: number;
-  resetIn: number; // seconds
+  resetIn: number;
 } {
   const limits = loadLimits();
-  const key = String(userId);
   const now = Date.now();
 
   let userLimit = limits[key];
 
-  // Reset if day has passed
   if (!userLimit || now >= userLimit.resetAt) {
     userLimit = { count: 0, resetAt: now + DAY_MS };
   }
@@ -55,13 +53,12 @@ export function checkRateLimit(userId: number, maxPerDay: number): {
   return { allowed, remaining: allowed ? remaining - 1 : remaining, resetIn };
 }
 
-export function getRateLimitInfo(userId: number, maxPerDay: number): {
+function getRateLimitInfoKeyed(key: string, maxPerDay: number): {
   used: number;
   remaining: number;
   resetIn: number;
 } {
   const limits = loadLimits();
-  const key = String(userId);
   const now = Date.now();
   const userLimit = limits[key];
 
@@ -74,4 +71,52 @@ export function getRateLimitInfo(userId: number, maxPerDay: number): {
     remaining: Math.max(0, maxPerDay - userLimit.count),
     resetIn: Math.ceil((userLimit.resetAt - now) / 1000),
   };
+}
+
+export function checkRateLimit(userId: number, maxPerDay: number): {
+  allowed: boolean;
+  remaining: number;
+  resetIn: number; // seconds
+} {
+  return checkRateLimitKeyed(String(userId), maxPerDay);
+}
+
+export function checkVideoRateLimit(userId: number, maxPerDay: number): {
+  allowed: boolean;
+  remaining: number;
+  resetIn: number;
+} {
+  return checkRateLimitKeyed(`video:${userId}`, maxPerDay);
+}
+
+export function getRateLimitInfo(userId: number, maxPerDay: number): {
+  used: number;
+  remaining: number;
+  resetIn: number;
+} {
+  return getRateLimitInfoKeyed(String(userId), maxPerDay);
+}
+
+export function getVideoRateLimitInfo(userId: number, maxPerDay: number): {
+  used: number;
+  remaining: number;
+  resetIn: number;
+} {
+  return getRateLimitInfoKeyed(`video:${userId}`, maxPerDay);
+}
+
+export function checkMusicRateLimit(userId: number, maxPerDay: number): {
+  allowed: boolean;
+  remaining: number;
+  resetIn: number;
+} {
+  return checkRateLimitKeyed(`music:${userId}`, maxPerDay);
+}
+
+export function getMusicRateLimitInfo(userId: number, maxPerDay: number): {
+  used: number;
+  remaining: number;
+  resetIn: number;
+} {
+  return getRateLimitInfoKeyed(`music:${userId}`, maxPerDay);
 }

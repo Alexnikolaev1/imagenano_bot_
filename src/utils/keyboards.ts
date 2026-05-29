@@ -49,6 +49,10 @@ export function buildMainMenuKeyboard(lang: Lang) {
     keyboard: [
       [
         { text: isRu ? '🎨 Сгенерировать' : '🎨 Generate' },
+        { text: isRu ? '🎬 Видео' : '🎬 Video' },
+      ],
+      [
+        { text: isRu ? '🎵 Музыка' : '🎵 Music' },
         { text: isRu ? '🎭 Стиль' : '🎭 Style' },
       ],
       [

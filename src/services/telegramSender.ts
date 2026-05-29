@@ -167,6 +167,211 @@ function sendPhotoFile(
   });
 }
 
+export async function sendAnimation(
+  chatId: number | string,
+  gifBase64: string,
+  caption?: string
+): Promise<{ message_id: number }> {
+  const filename = `clip_${Date.now()}.gif`;
+  const tmpPath = dataFile(filename);
+
+  try {
+    const normalized = normalizeBase64(gifBase64);
+    const buffer = Buffer.from(normalized, 'base64');
+    if (buffer.length === 0) throw new Error('Decoded GIF buffer is empty');
+    fs.writeFileSync(tmpPath, buffer);
+
+    return await sendAnimationFile(chatId, tmpPath, filename, caption);
+  } finally {
+    try {
+      if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    } catch {
+      // non-critical cleanup
+    }
+  }
+}
+
+function sendAnimationFile(
+  chatId: number | string,
+  filePath: string,
+  filename: string,
+  caption?: string
+): Promise<{ message_id: number }> {
+  return new Promise((resolve, reject) => {
+    const boundary = `----FormBoundary${Date.now()}`;
+    const fileData = fs.readFileSync(filePath);
+    const parts: Buffer[] = [];
+
+    parts.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${chatId}\r\n`
+    ));
+    parts.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="animation"; filename="${filename}"\r\nContent-Type: image/gif\r\n\r\n`
+    ));
+    parts.push(fileData);
+    parts.push(Buffer.from('\r\n'));
+
+    if (caption) {
+      parts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n`
+      ));
+      parts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="parse_mode"\r\n\r\nHTML\r\n`
+      ));
+    }
+
+    parts.push(Buffer.from(`--${boundary}--\r\n`));
+    const body = Buffer.concat(parts);
+
+    const options = {
+      hostname: 'api.telegram.org',
+      path: `/bot${getToken()}/sendAnimation`,
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': body.length,
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.ok) resolve(parsed.result);
+          else reject(new Error(`Telegram sendAnimation error: ${parsed.description}`));
+        } catch {
+          reject(new Error('Failed to parse sendAnimation response'));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+export async function sendVideo(
+  chatId: number | string,
+  videoUrl: string,
+  caption?: string
+): Promise<{ message_id: number }> {
+  const body = JSON.stringify({
+    chat_id: chatId,
+    video: videoUrl,
+    caption,
+    parse_mode: caption ? 'HTML' : undefined,
+    supports_streaming: true,
+  });
+
+  try {
+    return await apiRequest('/sendVideo', body);
+  } catch (err) {
+    logError('sendVideo by URL failed, message', err);
+    throw err;
+  }
+}
+
+export async function sendAudio(
+  chatId: number | string,
+  audioBase64: string,
+  mimeType: string,
+  caption?: string
+): Promise<{ message_id: number }> {
+  const ext = mimeType.includes('mpeg') || mimeType.includes('mp3') ? 'mp3' : 'wav';
+  const filename = `track_${Date.now()}.${ext}`;
+  const tmpPath = dataFile(filename);
+
+  try {
+    const normalized = normalizeBase64(audioBase64);
+    const buffer = Buffer.from(normalized, 'base64');
+    if (buffer.length === 0) throw new Error('Decoded audio buffer is empty');
+    fs.writeFileSync(tmpPath, buffer);
+
+    return await sendAudioFile(chatId, tmpPath, filename, mimeType, caption);
+  } finally {
+    try {
+      if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    } catch {
+      // non-critical cleanup
+    }
+  }
+}
+
+function sendAudioFile(
+  chatId: number | string,
+  filePath: string,
+  filename: string,
+  mimeType: string,
+  caption?: string
+): Promise<{ message_id: number }> {
+  return new Promise((resolve, reject) => {
+    const boundary = `----FormBoundary${Date.now()}`;
+    const fileData = fs.readFileSync(filePath);
+    const parts: Buffer[] = [];
+
+    parts.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${chatId}\r\n`
+    ));
+    parts.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`
+    ));
+    parts.push(fileData);
+    parts.push(Buffer.from('\r\n'));
+
+    if (caption) {
+      parts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n`
+      ));
+      parts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="parse_mode"\r\n\r\nHTML\r\n`
+      ));
+    }
+
+    parts.push(Buffer.from(`--${boundary}--\r\n`));
+    const body = Buffer.concat(parts);
+
+    const options = {
+      hostname: 'api.telegram.org',
+      path: `/bot${getToken()}/sendAudio`,
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': body.length,
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.ok) resolve(parsed.result);
+          else {
+            logError('sendAudio rejected by Telegram', {
+              description: parsed.description,
+              errorCode: parsed.error_code,
+            });
+            reject(new Error(`Telegram sendAudio error: ${parsed.description}`));
+          }
+        } catch {
+          reject(new Error('Failed to parse sendAudio response'));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      logError('sendAudio network error', err);
+      reject(err);
+    });
+    req.write(body);
+    req.end();
+  });
+}
+
 function normalizeBase64(raw: string): string {
   const trimmed = raw.trim();
   const marker = 'base64,';

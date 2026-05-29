@@ -1,6 +1,6 @@
 import { Bot } from 'grammy';
 import type { AppContext } from '../context';
-import { getRateLimitInfo } from '../utils/rateLimit';
+import { getRateLimitInfo, getVideoRateLimitInfo, getMusicRateLimitInfo } from '../utils/rateLimit';
 import { buildStyleKeyboard, buildLangKeyboard } from '../utils/keyboards';
 import { getUserLang, getUserStyle } from '../storage/userPrefs';
 import { styleLabel } from '../i18n';
@@ -17,16 +17,33 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
     const lang = getUserLang(userId, ctx.from?.language_code);
     const max = ctx.config.maxRequestsPerDay;
     const info = getRateLimitInfo(userId, max);
+    const videoMax = ctx.config.maxVideoRequestsPerDay;
+    const videoInfo = getVideoRateLimitInfo(userId, videoMax);
+    const musicMax = ctx.config.maxMusicRequestsPerDay;
+    const musicInfo = getMusicRateLimitInfo(userId, musicMax);
 
-    await ctx.reply(
+    let text =
       `${ctx.t('statsTitle')}\n\n` +
-        `${ctx.t('statsUsed')}: <b>${info.used}</b> / ${max}\n` +
-        `${ctx.t('statsRemaining')}: <b>${info.remaining}</b>\n` +
-        (info.resetIn > 0
-          ? `${ctx.t('statsResetsIn')}: <b>${Math.ceil(info.resetIn / 3600)}${ctx.t('hours')}</b>`
-          : ctx.t('statsResetsMidnight')),
-      { parse_mode: 'HTML' }
-    );
+      `🎨 ${ctx.t('statsUsed')}: <b>${info.used}</b> / ${max}\n` +
+      `🎨 ${ctx.t('statsRemaining')}: <b>${info.remaining}</b>\n`;
+
+    if (ctx.videoService) {
+      text +=
+        `\n🎬 ${ctx.t('statsUsed')}: <b>${videoInfo.used}</b> / ${videoMax}\n` +
+        `🎬 ${ctx.t('statsRemaining')}: <b>${videoInfo.remaining}</b>\n`;
+    }
+
+    if (ctx.musicService) {
+      text +=
+        `\n🎵 ${ctx.t('statsUsed')}: <b>${musicInfo.used}</b> / ${musicMax}\n` +
+        `🎵 ${ctx.t('statsRemaining')}: <b>${musicInfo.remaining}</b>\n`;
+    }
+
+    text += info.resetIn > 0
+      ? `\n${ctx.t('statsResetsIn')}: <b>${Math.ceil(info.resetIn / 3600)}${ctx.t('hours')}</b>`
+      : `\n${ctx.t('statsResetsMidnight')}`;
+
+    await ctx.reply(text, { parse_mode: 'HTML' });
   });
 
   bot.command('style', async (ctx) => {
@@ -57,6 +74,14 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
   });
 
   // Menu button aliases (reply keyboard)
+  bot.hears(['🎬 Видео', '🎬 Video'], async (ctx) => {
+    await ctx.reply(ctx.t('videoHowTo'), { parse_mode: 'HTML' });
+  });
+
+  bot.hears(['🎵 Музыка', '🎵 Music'], async (ctx) => {
+    await ctx.reply(ctx.t('musicHowTo'), { parse_mode: 'HTML' });
+  });
+
   bot.hears(['🎨 Сгенерировать', '🎨 Generate'], async (ctx) => {
     const lang = ctx.from?.id
       ? getUserLang(ctx.from.id, ctx.from.language_code)

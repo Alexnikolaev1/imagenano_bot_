@@ -18,6 +18,12 @@ export interface AppConfig {
   enhancePrompts: boolean;
   botUsername?: string;
   defaultLang: 'ru' | 'en';
+  /** Wan 2.1 video — separate daily limit */
+  maxVideoRequestsPerDay: number;
+  videoEnabled: boolean;
+  /** MusicGen via ModelScope — separate daily limit */
+  maxMusicRequestsPerDay: number;
+  musicEnabled: boolean;
 }
 
 export function loadConfig(): AppConfig {
@@ -54,5 +60,9 @@ export function loadConfig(): AppConfig {
     enhancePrompts: process.env.ENHANCE_PROMPTS !== 'false' && Boolean(googleApiKey),
     botUsername: process.env.BOT_USERNAME,
     defaultLang,
+    maxVideoRequestsPerDay: parseInt(process.env.MAX_VIDEO_REQUESTS_PER_DAY || '5', 10),
+    videoEnabled: process.env.VIDEO_ENABLED !== 'false',
+    maxMusicRequestsPerDay: parseInt(process.env.MAX_MUSIC_REQUESTS_PER_DAY || '5', 10),
+    musicEnabled: process.env.MUSIC_ENABLED !== 'false',
   };
 }

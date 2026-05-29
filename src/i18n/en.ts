@@ -1,11 +1,14 @@
 export const en = {
   welcome: `👋 <b>Welcome to Imagnano!</b>
 
-I create and edit images with Google Gemini AI.
+I create images (Cloudflare Flux), short video clips, and music (ModelScope MusicGen).
 
 <b>Quick start:</b>
 • Send any text — I'll generate an image
 • <code>/generate sunset over Tokyo, cyberpunk</code>
+• <code>/video a cat walking in snow</code> — text to video
+• <code>/music calm lo-fi jazz with piano</code> — text to music
+• Photo + <code>/video gentle camera zoom</code> — image to video
 • Send a photo with a caption to edit it
 • <code>/style</code> — pick an art style
 
@@ -26,6 +29,13 @@ Photo + caption: <code>/variation</code>
 
 <b>Style:</b>
 /style — choose preset (anime, photo, watercolor…)
+
+<b>Video (~1–5 min):</b>
+/video &lt;prompt&gt;
+Photo + caption <code>/video …</code>
+
+<b>Music (~5–15 sec, MusicGen):</b>
+/music &lt;prompt&gt;
 
 <b>Other:</b>
 /stats — usage today
@@ -81,6 +91,51 @@ Send a photo with caption <code>/variation</code>`,
   inlineDesc: 'Open bot to generate in private chat',
   regenLimit: '⏰ Daily limit reached. Try again tomorrow.',
   enhanceFailed: '⚠️ Could not enhance prompt, using original.',
+
+  videoGenerating: '🎬 Generating video…\n\nThis usually takes 1–5 minutes. Please wait.',
+  videoFromImage: '🎬 Animating your photo…\n\nUsually 1–5 minutes.',
+  videoDoneSending: '✅ Video ready ({seconds}s). Sending…',
+  videoSent: '✅ Video sent!',
+  videoPreviewSending: '🖼 Cinematic still ready ({seconds}s). Sending…',
+  videoPreviewSent: '✅ Cinematic still sent (free Cloudflare mode).',
+  videoGifSending: '🎞 Short clip ready ({seconds}s). Sending…',
+  videoGifSent: '✅ Looping clip sent (free Cloudflare GIF).',
+  videoGeneratedCaption: '🎬 <b>Generated video:</b>',
+  videoGifCaption: '🎞 <b>Looping clip (free GIF):</b>',
+  videoPreviewCaption: '🖼 <b>Cinematic still (preview, not mp4):</b>',
+  videoFromImageCaption: '🎬 <b>From your photo:</b>',
+  videoGifFromImageCaption: '🎞 <b>Looping clip from photo:</b>',
+  videoPreviewFromImageCaption: '🖼 <b>Cinematic still from photo (preview):</b>',
+  videoHowTo: `🎬 <b>Text-to-video</b>
+
+<code>/video your scene description</code>
+
+Example:
+<code>/video a golden retriever running on a beach at sunset, cinematic</code>
+
+<b>Image-to-video:</b> send a photo with caption:
+<code>/video slow zoom in, leaves moving in the wind</code>
+
+<i>Free by default:</i> short looping GIF via Cloudflare (~5/day). With <code>MODELSCOPE_API_TOKEN</code> the bot tries mp4 first, then GIF.`,
+  videoNotConfigured:
+    '🎬 Video is disabled. Cloudflare keys are enough for free GIF mode, or set <code>VIDEO_ENABLED=true</code>.',
+  needVideoPrompt:
+    '🎬 Add a description after <code>/video</code>\n\nExample: <code>/video waves on the shore at night</code>',
+
+  musicGenerating: '🎵 Generating music…\n\nUsually 5–15 seconds. Please wait.',
+  musicDoneSending: '✅ Track ready ({seconds}s). Sending…',
+  musicSent: '✅ Music sent!',
+  musicGeneratedCaption: '🎵 <b>Generated music:</b>',
+  musicHowTo: `🎵 <b>Text-to-music</b>
+
+<code>/music your music description</code>
+
+Example:
+<code>/music calm lo-fi hip hop with soft piano and vinyl crackle</code>
+
+<i>Free via ModelScope MusicGen-Small</i> (~10 sec clip, WAV). Requires <code>MODELSCOPE_API_TOKEN</code>.`,
+  musicNotConfigured:
+    '🎵 Music is disabled. Add <code>MODELSCOPE_API_TOKEN</code> (ms-…) from modelscope.cn → Account → Access tokens.',
 } as const;
 
 export type TranslationKey = keyof typeof en;

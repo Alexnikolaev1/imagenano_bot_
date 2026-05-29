@@ -3,12 +3,15 @@ import type { TranslationKey } from './en';
 export const ru: Record<TranslationKey, string> = {
   welcome: `👋 <b>Добро пожаловать в Imagnano!</b>
 
-Создаю и редактирую изображения с помощью Google Gemini.
+Создаю картинки (Cloudflare Flux), короткие видео и музыку (ModelScope MusicGen).
 
 <b>Быстрый старт:</b>
-• Напишите любой текст — сгенерирую картинку
+• Напишите текст — сгенерирую картинку
 • <code>/generate закат над Токио, киберпанк</code>
-• Фото + подпись — редактирование
+• <code>/video кот идёт по снегу</code> — видео из текста
+• <code>/music спокойный lo-fi джаз с пианино</code> — музыка из текста
+• Фото + <code>/video плавное приближение камеры</code> — видео из фото
+• Фото + подпись — редактирование картинки
 • <code>/style</code> — выбор стиля
 
 /help — все команды`,
@@ -28,6 +31,13 @@ export const ru: Record<TranslationKey, string> = {
 
 <b>Стиль:</b>
 /style — пресет (аниме, фото, акварель…)
+
+<b>Видео (~1–5 мин):</b>
+/video &lt;описание&gt;
+Фото + подпись <code>/video …</code>
+
+<b>Музыка (~5–15 сек, MusicGen):</b>
+/music &lt;описание&gt;
 
 <b>Прочее:</b>
 /stats — лимит на сегодня
@@ -83,4 +93,49 @@ export const ru: Record<TranslationKey, string> = {
   inlineDesc: 'Открыть бота для генерации в личке',
   regenLimit: '⏰ Дневной лимит исчерпан. Попробуйте завтра.',
   enhanceFailed: '⚠️ Не удалось улучшить запрос, использую оригинал.',
+
+  videoGenerating: '🎬 Генерирую видео…\n\nОбычно 1–5 минут. Подождите, пожалуйста.',
+  videoFromImage: '🎬 Оживляю ваше фото…\n\nОбычно 1–5 минут.',
+  videoDoneSending: '✅ Видео готово ({seconds} с). Отправляю…',
+  videoSent: '✅ Видео отправлено!',
+  videoPreviewSending: '🖼 Кино-кадр готов ({seconds} с). Отправляю…',
+  videoPreviewSent: '✅ Кино-кадр отправлен (бесплатный режим Cloudflare).',
+  videoGifSending: '🎞 Короткий клип готов ({seconds} с). Отправляю…',
+  videoGifSent: '✅ Зацикленный клип отправлен (бесплатный GIF Cloudflare).',
+  videoGeneratedCaption: '🎬 <b>Сгенерировано видео:</b>',
+  videoGifCaption: '🎞 <b>Короткий клип (бесплатный GIF):</b>',
+  videoPreviewCaption: '🖼 <b>Кино-кадр (preview, не mp4):</b>',
+  videoFromImageCaption: '🎬 <b>Из вашего фото:</b>',
+  videoGifFromImageCaption: '🎞 <b>Клип из фото:</b>',
+  videoPreviewFromImageCaption: '🖼 <b>Кино-кадр из фото (preview):</b>',
+  videoHowTo: `🎬 <b>Видео из текста</b>
+
+<code>/video описание сцены</code>
+
+Пример:
+<code>/video золотистый ретривер бежит по пляжу на закате, кинематографично</code>
+
+<b>Видео из фото:</b> отправьте фото с подписью:
+<code>/video медленный зум, листья на ветру</code>
+
+<i>По умолчанию бесплатно:</i> короткий GIF через Cloudflare (~5/день). С <code>MODELSCOPE_API_TOKEN</code> сначала пробует mp4, затем GIF.`,
+  videoNotConfigured:
+    '🎬 Видео отключено. Для бесплатного GIF достаточно ключей Cloudflare, или включите <code>VIDEO_ENABLED=true</code>.',
+  needVideoPrompt:
+    '🎬 Укажите описание после <code>/video</code>\n\nПример: <code>/video волны ночью на берегу</code>',
+
+  musicGenerating: '🎵 Генерирую музыку…\n\nОбычно 5–15 секунд. Подождите, пожалуйста.',
+  musicDoneSending: '✅ Трек готов ({seconds} с). Отправляю…',
+  musicSent: '✅ Музыка отправлена!',
+  musicGeneratedCaption: '🎵 <b>Сгенерированная музыка:</b>',
+  musicHowTo: `🎵 <b>Музыка из текста</b>
+
+<code>/music описание музыки</code>
+
+Пример:
+<code>/music спокойный lo-fi hip-hop с мягким пианино и шумом пластинки</code>
+
+<i>Бесплатно через ModelScope MusicGen-Small</i> (~10 сек, WAV). Нужен <code>MODELSCOPE_API_TOKEN</code>.`,
+  musicNotConfigured:
+    '🎵 Музыка отключена. Добавьте <code>MODELSCOPE_API_TOKEN</code> (ms-…) на modelscope.cn → Аккаунт → Access tokens.',
 };

@@ -4,6 +4,8 @@ import type { AppContext } from './context';
 import { createDepsMiddleware } from './middleware/deps';
 import { ImageService } from './services/imageService';
 import { PromptEnhancer } from './services/promptEnhancer';
+import { createVideoServiceFromEnv } from './services/videoService';
+import { createMusicServiceFromEnv } from './services/musicService';
 import { registerHandlers } from './handlers';
 import { logError } from './utils/logger';
 
@@ -23,9 +25,15 @@ export function createBot(): { bot: Bot<AppContext>; imageService: ImageService 
     enhancer,
   });
 
+  const videoService =
+    config.videoEnabled ? createVideoServiceFromEnv(imageService) ?? undefined : undefined;
+
+  const musicService =
+    config.musicEnabled ? createMusicServiceFromEnv() ?? undefined : undefined;
+
   const bot = new Bot<AppContext>(config.telegramToken);
 
-  bot.use(createDepsMiddleware({ config, imageService }));
+  bot.use(createDepsMiddleware({ config, imageService, videoService, musicService }));
 
   bot.catch((err) => {
     logError('grammY bot error', {

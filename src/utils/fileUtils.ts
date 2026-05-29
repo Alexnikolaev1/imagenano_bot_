@@ -90,3 +90,7 @@ function downloadBuffer(url: string): Promise<Buffer> {
     }).on('error', reject);
   });
 }
+
+export function downloadBufferFromUrl(url: string): Promise<Buffer> {
+  return downloadBuffer(url);
+}

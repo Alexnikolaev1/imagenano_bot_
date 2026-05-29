@@ -7,6 +7,8 @@ export function createDepsMiddleware(services: BotServices) {
   return async (ctx: AppContext, next: NextFunction): Promise<void> => {
     ctx.config = services.config;
     ctx.imageService = services.imageService;
+    ctx.videoService = services.videoService;
+    ctx.musicService = services.musicService;
 
     const userId = ctx.from?.id;
     const lang = userId
