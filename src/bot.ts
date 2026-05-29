@@ -18,7 +18,8 @@ export function createBot(): { bot: Bot<AppContext>; imageService: ImageService 
   const imageService = new ImageService({
     accountId: config.cloudflareAccountId,
     apiToken: config.cloudflareApiToken,
-    model: config.cloudflareImageModel,
+    generateModel: config.cloudflareImageModel,
+    editModel: config.cloudflareEditImageModel,
     enhancer,
   });
 

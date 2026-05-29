@@ -1,7 +1,7 @@
 {
   "name": "tg-image-bot",
   "version": "1.0.0",
-  "description": "Telegram bot for AI image generation and editing via Google AI Studio",
+  "description": "Telegram bot for AI image generation and editing via Cloudflare Workers AI",
   "main": "src/index.ts",
   "scripts": {
     "dev": "ts-node src/index.ts",
@@ -15,7 +15,8 @@
     "@vercel/node": "^5.8.6",
     "dotenv": "^17.4.2",
     "grammy": "^1.30.0",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

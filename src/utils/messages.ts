@@ -9,10 +9,10 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
         ? '⏳ <b>Достигнут лимит запросов.</b>\n\nПодождите немного и попробуйте снова.'
         : '⏳ <b>Rate limit reached.</b>\n\nWait a moment and try again.';
 
-    case 'edit_unsupported':
+    case 'need_instruction':
       return isRu
-        ? '🖼 <b>Редактирование фото и вариации пока недоступны.</b>\n\nТекущая модель (Flux Schnell) умеет только генерировать изображения по тексту. Отправьте текстовое описание.'
-        : '🖼 <b>Photo editing and variations are not available.</b>\n\nThe current model (Flux Schnell) only generates images from text. Send a text description instead.';
+        ? '✏️ <b>Нужна подпись к фото.</b>\n\nНапример: <code>дорисуй кошку</code> или <code>/edit фиолетовое небо</code>'
+        : '✏️ <b>Caption required.</b>\n\nExample: <code>add a cat</code> or <code>/edit purple sky</code>';
 
     case 'auth_error':
       return isRu

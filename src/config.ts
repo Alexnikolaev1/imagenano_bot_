@@ -5,8 +5,10 @@ export interface AppConfig {
   /** Cloudflare Workers AI credentials (image generation) */
   cloudflareAccountId: string;
   cloudflareApiToken: string;
-  /** Cloudflare image model (default: Flux Schnell, free tier) */
+  /** Text-to-image model (default: Flux Schnell) */
   cloudflareImageModel: string;
+  /** Photo edit / variation model (default: Flux Klein 4B, multipart) */
+  cloudflareEditImageModel: string;
   /** Optional Google AI Studio key — only used for prompt enhancement (text) */
   googleApiKey?: string;
   /** Gemini text model used for prompt enhancement */
@@ -42,6 +44,8 @@ export function loadConfig(): AppConfig {
     cloudflareApiToken,
     cloudflareImageModel:
       process.env.CLOUDFLARE_IMAGE_MODEL || '@cf/black-forest-labs/flux-1-schnell',
+    cloudflareEditImageModel:
+      process.env.CLOUDFLARE_EDIT_IMAGE_MODEL || '@cf/black-forest-labs/flux-2-klein-4b',
     googleApiKey,
     geminiTextModel: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
     adminChatId: process.env.ADMIN_CHAT_ID,
