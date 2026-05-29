@@ -6,7 +6,7 @@ import { getUserLang } from '../storage/userPrefs';
 export function createDepsMiddleware(services: BotServices) {
   return async (ctx: AppContext, next: NextFunction): Promise<void> => {
     ctx.config = services.config;
-    ctx.gemini = services.gemini;
+    ctx.imageService = services.imageService;
 
     const userId = ctx.from?.id;
     const lang = userId

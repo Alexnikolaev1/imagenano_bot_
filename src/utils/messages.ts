@@ -6,8 +6,13 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
   switch (errorCode) {
     case 'rate_limit':
       return isRu
-        ? '⏳ <b>Лимит Google AI Studio.</b>\n\nПодождите несколько минут или используйте платный API-ключ.'
-        : '⏳ <b>Google AI Studio rate limit.</b>\n\nWait a few minutes or use a paid API key.';
+        ? '⏳ <b>Достигнут лимит запросов.</b>\n\nПодождите немного и попробуйте снова.'
+        : '⏳ <b>Rate limit reached.</b>\n\nWait a moment and try again.';
+
+    case 'edit_unsupported':
+      return isRu
+        ? '🖼 <b>Редактирование фото и вариации пока недоступны.</b>\n\nТекущая модель (Flux Schnell) умеет только генерировать изображения по тексту. Отправьте текстовое описание.'
+        : '🖼 <b>Photo editing and variations are not available.</b>\n\nThe current model (Flux Schnell) only generates images from text. Send a text description instead.';
 
     case 'auth_error':
       return isRu

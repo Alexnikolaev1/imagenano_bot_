@@ -89,8 +89,8 @@ export function registerCallbackHandlers(bot: Bot<AppContext>): void {
         styleKey: getUserStyle(userId),
         lang,
         enhance: ctx.config.enhancePrompts,
-        gemini: ctx.gemini,
-        enhancer: ctx.gemini.getEnhancer(),
+        imageService: ctx.imageService,
+        enhancer: ctx.imageService.getEnhancer(),
         t: ctx.t,
       }).catch((err) => logError('Regen job failed', err));
       return;

@@ -4,18 +4,18 @@
 =======
 # Imagnano — Telegram AI Image Bot
 
-Telegram-бот для генерации и редактирования изображений через **Google Gemini**, с деплоем на **Vercel** (webhook) или локально (long polling).
+Telegram-бот для генерации изображений через **Cloudflare Workers AI (Flux Schnell)**, с деплоем на **Vercel** (webhook) или локально (long polling).
 
 ## Возможности
 
 - **Генерация** — `/generate …` или просто текст в чат
-- **Редактирование** — фото + подпись с инструкцией
-- **Вариации** — фото + `/variation`
 - **Стили** — `/style` (фото, аниме, акварель, киберпанк, 3D…)
 - **RU / EN** — `/lang`, автоопределение по языку Telegram
-- **Улучшение промптов** — короткие запросы расширяются через Gemini Flash
+- **Улучшение промптов** — короткие запросы расширяются через Gemini Flash (опционально, нужен Google-ключ)
 - **Inline mode** — `@botname описание` в любом чате
 - **Лимиты** — N запросов в сутки на пользователя
+
+> Flux Schnell генерирует изображения по тексту. Редактирование фото и вариации (image-to-image) этой моделью не поддерживаются.
 
 ## Архитектура
 
@@ -35,7 +35,7 @@ imagnano_bot/
 │   │   ├── inline.ts
 │   │   └── text.ts
 │   ├── services/
-│   │   ├── geminiService.ts
+│   │   ├── imageService.ts      # Cloudflare Workers AI (Flux Schnell)
 │   │   ├── promptEnhancer.ts
 │   │   ├── imagePipeline.ts     # Единый async-пайплайн
 │   │   ├── rateLimitGuard.ts
@@ -60,7 +60,7 @@ imagnano_bot/
 
 ```bash
 cp .env.example .env
-# Заполните TELEGRAM_BOT_TOKEN и GOOGLE_AI_STUDIO_API_KEY
+# Заполните TELEGRAM_BOT_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN
 
 npm install
 npm run dev          # long polling локально
@@ -77,12 +77,15 @@ npm run dev          # long polling локально
 | Переменная | Обязательно | Описание |
 |------------|-------------|----------|
 | `TELEGRAM_BOT_TOKEN` | да | Токен от @BotFather |
-| `GOOGLE_AI_STUDIO_API_KEY` | да | Ключ Google AI Studio |
+| `CLOUDFLARE_ACCOUNT_ID` | да | Account ID из дашборда Cloudflare |
+| `CLOUDFLARE_API_TOKEN` | да | API-токен с доступом к Workers AI |
+| `CLOUDFLARE_IMAGE_MODEL` | нет | По умолчанию `@cf/black-forest-labs/flux-1-schnell` |
+| `GOOGLE_AI_STUDIO_API_KEY` | нет | Только для улучшения промптов (текст); без него улучшение отключается |
+| `GEMINI_TEXT_MODEL` | нет | По умолчанию `gemini-2.5-flash` |
+| `ENHANCE_PROMPTS` | нет | `false` чтобы отключить улучшение промптов |
 | `ADMIN_CHAT_ID` | нет | Уведомления об ошибках |
 | `MAX_REQUESTS_PER_DAY` | нет | Лимит (по умолчанию 10) |
 | `DEFAULT_LANG` | нет | `ru` или `en` |
-| `GEMINI_IMAGE_MODEL` | нет | По умолчанию `gemini-2.5-flash-image` |
-| `ENHANCE_PROMPTS` | нет | `false` чтобы отключить улучшение промптов |
 
 ## Команды бота
 

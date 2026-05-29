@@ -1,4 +1,4 @@
-// src/services/promptEnhancer.ts — text-only via the same image model (no extra paid models)
+// src/services/promptEnhancer.ts — optional text-only prompt improvement via Gemini (free tier text model)
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { logInfo, logWarn } from '../utils/logger';

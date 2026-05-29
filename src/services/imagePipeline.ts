@@ -1,6 +1,6 @@
 // src/services/imagePipeline.ts — unified async image job (webhook-safe)
 
-import { GeminiService } from './geminiService';
+import { ImageService } from './imageService';
 import { PromptEnhancer } from './promptEnhancer';
 import { sendPhoto, editMessage } from './telegramSender';
 import { downloadTelegramFile, bufferToBase64 } from '../utils/fileUtils';
@@ -26,7 +26,7 @@ export interface ImageJobParams {
   styleKey?: string;
   lang: Lang;
   enhance: boolean;
-  gemini: GeminiService;
+  imageService: ImageService;
   enhancer?: PromptEnhancer;
   t: TranslateFn;
 }
@@ -37,7 +37,7 @@ export async function runImageJob(params: ImageJobParams): Promise<void> {
     statusMessageId,
     userId,
     type,
-    gemini,
+    imageService,
     enhancer,
     t,
     lang,
@@ -64,7 +64,7 @@ export async function runImageJob(params: ImageJobParams): Promise<void> {
       }
 
       logInfo('Image job: generate', { userId, prompt: prompt.slice(0, 80) });
-      result = await gemini.generateImage(prompt);
+      result = await imageService.generateImage(prompt);
       params.prompt = prompt;
     } else {
       const token = process.env.TELEGRAM_BOT_TOKEN!;
@@ -81,11 +81,11 @@ export async function runImageJob(params: ImageJobParams): Promise<void> {
           return;
         }
         logInfo('Image job: edit', { userId, instruction: instruction.slice(0, 80) });
-        result = await gemini.editImage(base64, mimeType, instruction);
+        result = await imageService.editImage(base64, mimeType, instruction);
         params.prompt = instruction;
       } else {
         logInfo('Image job: variation', { userId });
-        result = await gemini.variateImage(base64, mimeType);
+        result = await imageService.variateImage(base64, mimeType);
       }
     }
 

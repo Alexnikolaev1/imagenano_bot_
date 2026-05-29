@@ -72,7 +72,7 @@ async function handlePhotoMessage(ctx: AppContext, overrideFileId?: string): Pro
     instruction,
     lang,
     enhance: false,
-    gemini: ctx.gemini,
+    imageService: ctx.imageService,
     t: ctx.t,
   }).catch((err) => logError('Photo job failed', err));
 }

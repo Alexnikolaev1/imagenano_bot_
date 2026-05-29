@@ -46,8 +46,8 @@ export function registerTextHandlers(bot: Bot<AppContext>): void {
       styleKey,
       lang,
       enhance: ctx.config.enhancePrompts,
-      gemini: ctx.gemini,
-      enhancer: ctx.gemini.getEnhancer(),
+      imageService: ctx.imageService,
+      enhancer: ctx.imageService.getEnhancer(),
       t: ctx.t,
     }).catch((err) => logError('Text generate job failed', err));
   });
