@@ -116,7 +116,7 @@ Example:
 <b>Image-to-video:</b> send a photo with caption:
 <code>/video slow zoom in, leaves moving in the wind</code>
 
-<i>Free by default:</i> short looping GIF via Cloudflare (~5/day). With <code>MODELSCOPE_API_TOKEN</code> the bot tries mp4 first, then GIF.`,
+<i>Free by default:</i> short looping GIF via Cloudflare (Cloudflare keys only). mp4 via ModelScope requires <code>VIDEO_PROVIDER=modelscope</code> and Alibaba Cloud linked on modelscope.cn.`,
   videoNotConfigured:
     '🎬 Video is disabled. Cloudflare keys are enough for free GIF mode, or set <code>VIDEO_ENABLED=true</code>.',
   needVideoPrompt:
@@ -133,9 +133,9 @@ Example:
 Example:
 <code>/music calm lo-fi hip hop with soft piano and vinyl crackle</code>
 
-<i>Free via ModelScope MusicGen-Small</i> (~10 sec clip, WAV). Requires <code>MODELSCOPE_API_TOKEN</code>.`,
+<i>Free via ModelScope MusicGen-Small</i> (~10 sec clip, WAV). Requires <code>MODELSCOPE_API_TOKEN</code> and Alibaba Cloud linked on modelscope.cn.`,
   musicNotConfigured:
-    '🎵 Music is disabled. Add <code>MODELSCOPE_API_TOKEN</code> (ms-…) from modelscope.cn → Account → Access tokens.',
+    '🎵 Music is disabled. Add <code>MODELSCOPE_API_TOKEN</code> (ms-…) from modelscope.cn. Generation also requires Alibaba Cloud linked in your profile.',
 } as const;
 
 export type TranslationKey = keyof typeof en;

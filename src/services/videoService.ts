@@ -110,6 +110,8 @@ export class VideoService {
     const retryable = new Set([
       'modelscope_daily_limit',
       'modelscope_no_video_model',
+      'modelscope_alibaba_bind_required',
+      'modelscope_auth_error',
       'video_timeout',
     ]);
     if (!result.error || !retryable.has(result.error)) return result;
@@ -129,15 +131,7 @@ function resolveProvider(): VideoProvider | null {
   }
   if (explicit === 'none' || explicit === 'off') return null;
 
-  // Paid DashScope only when explicitly requested
-  if (explicit === 'dashscope') return 'dashscope';
-
-  // Try ModelScope mp4 when ms- token is present; GIF fallback handles failures
-  if (process.env.MODELSCOPE_API_TOKEN?.trim() && explicit !== 'cloudflare_gif') {
-    return 'modelscope';
-  }
-
-  // Best free default: 2-frame GIF on Cloudflare neurons (~160/run, ~60/day on free tier)
+  // Free default: Cloudflare GIF — works with only CLOUDFLARE_* keys
   return 'cloudflare_gif';
 }
 

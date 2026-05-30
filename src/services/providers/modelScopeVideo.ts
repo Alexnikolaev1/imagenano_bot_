@@ -3,6 +3,7 @@
 // Docs pattern mirrors image API: https://api-inference.modelscope.cn/v1/images/generations
 
 import { logError, logInfo, logWarn } from '../../utils/logger';
+import { extractModelScopeMessage, normalizeModelScopeError } from '../../utils/modelScopeErrors';
 import type { VideoResult } from '../../types';
 
 export interface ModelScopeVideoConfig {
@@ -84,19 +85,15 @@ export class ModelScopeVideoService {
       }
 
       if (!submitRes.ok) {
-        const msg =
-          (submitBody.message as string) ||
-          ((submitBody.errors as Record<string, unknown>)?.message as string) ||
-          (submitBody.error as string) ||
-          `ModelScope HTTP ${submitRes.status}`;
+        const msg = extractModelScopeMessage(submitBody);
         logWarn('ModelScope video submit rejected', { status: submitRes.status, body: submitBody });
-        if (
-          submitRes.status === 404 ||
-          /invalid model|model id|not found|unsupported|not exist/i.test(String(msg))
-        ) {
+        if (submitRes.status === 404) {
           return { success: false, error: 'modelscope_no_video_model' };
         }
-        return { success: false, error: msg };
+        return {
+          success: false,
+          error: normalizeModelScopeError(msg, submitRes.status),
+        };
       }
 
       const directUrl = extractVideoUrl(submitBody);

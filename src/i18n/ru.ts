@@ -118,7 +118,7 @@ export const ru: Record<TranslationKey, string> = {
 <b>Видео из фото:</b> отправьте фото с подписью:
 <code>/video медленный зум, листья на ветру</code>
 
-<i>По умолчанию бесплатно:</i> короткий GIF через Cloudflare (~5/день). С <code>MODELSCOPE_API_TOKEN</code> сначала пробует mp4, затем GIF.`,
+<i>По умолчанию бесплатно:</i> короткий GIF через Cloudflare (только ключи Cloudflare). mp4 через ModelScope — только с <code>VIDEO_PROVIDER=modelscope</code> и привязкой Alibaba Cloud.`,
   videoNotConfigured:
     '🎬 Видео отключено. Для бесплатного GIF достаточно ключей Cloudflare, или включите <code>VIDEO_ENABLED=true</code>.',
   needVideoPrompt:
@@ -135,7 +135,7 @@ export const ru: Record<TranslationKey, string> = {
 Пример:
 <code>/music спокойный lo-fi hip-hop с мягким пианино и шумом пластинки</code>
 
-<i>Бесплатно через ModelScope MusicGen-Small</i> (~10 сек, WAV). Нужен <code>MODELSCOPE_API_TOKEN</code>.`,
+<i>Бесплатно через ModelScope MusicGen-Small</i> (~10 сек, WAV). Нужны <code>MODELSCOPE_API_TOKEN</code> и привязка Alibaba Cloud на modelscope.cn.`,
   musicNotConfigured:
-    '🎵 Музыка отключена. Добавьте <code>MODELSCOPE_API_TOKEN</code> (ms-…) на modelscope.cn → Аккаунт → Access tokens.',
+    '🎵 Музыка отключена. Добавьте <code>MODELSCOPE_API_TOKEN</code> (ms-…) на modelscope.cn. Для генерации также нужна привязка Alibaba Cloud в профиле.',
 };

@@ -45,8 +45,18 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
 
     case 'modelscope_daily_limit':
       return isRu
-        ? '⏰ <b>Исчерпана дневная квота ModelScope API</b> (~2000 вызовов/сутки, сброс в 00:00 UTC+8).\n\nПопробуйте завтра. Если включён fallback (по умолчанию), бот отправит кино-кадр через Cloudflare.'
-        : '⏰ <b>ModelScope daily API quota reached</b> (~2000 calls/day, resets 00:00 UTC+8).\n\nTry tomorrow. With fallback enabled (default), the bot sends a Cloudflare cinematic still instead.';
+        ? '⏰ <b>Исчерпана дневная квота ModelScope API</b> (~2000 вызовов/сутки, сброс в 00:00 UTC+8).\n\nПопробуйте завтра. Для видео бот отправит GIF через Cloudflare (если включён fallback).'
+        : '⏰ <b>ModelScope daily API quota reached</b> (~2000 calls/day, resets 00:00 UTC+8).\n\nTry tomorrow. For video, the bot falls back to a Cloudflare GIF when enabled.';
+
+    case 'modelscope_alibaba_bind_required':
+      return isRu
+        ? '☁️ <b>ModelScope требует привязку Alibaba Cloud.</b>\n\nЭто не DashScope и не оплата — просто верификация аккаунта на modelscope.cn:\n1. Войдите на <b>modelscope.cn</b>\n2. Профиль → привязать <b>Alibaba Cloud</b>\n3. Повторите запрос\n\n<b>Видео без этого:</b> в Vercel поставьте <code>VIDEO_PROVIDER=cloudflare_gif</code> (бесплатный GIF, только ключи Cloudflare).'
+        : '☁️ <b>ModelScope requires an Alibaba Cloud account link.</b>\n\nThis is not DashScope billing — just account verification on modelscope.cn:\n1. Log in at <b>modelscope.cn</b>\n2. Profile → bind <b>Alibaba Cloud</b>\n3. Try again\n\n<b>Video without that:</b> set <code>VIDEO_PROVIDER=cloudflare_gif</code> on Vercel (free GIF, Cloudflare keys only).';
+
+    case 'modelscope_auth_error':
+      return isRu
+        ? '🔑 <b>Неверный ModelScope token.</b>\n\nПроверьте <code>MODELSCOPE_API_TOKEN</code> (ms-…) на modelscope.cn → Access tokens.'
+        : '🔑 <b>Invalid ModelScope token.</b>\n\nCheck <code>MODELSCOPE_API_TOKEN</code> (ms-…) at modelscope.cn → Access tokens.';
 
     case 'modelscope_no_video_model':
       return isRu
@@ -80,10 +90,14 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
         ? '⏳ <b>Музыка не успела сгенерироваться за отведённое время.</b>\n\nПопробуйте короче промпт или позже.'
         : '⏳ <b>Music generation timed out.</b>\n\nTry a shorter prompt or try again later.';
 
-    default:
+    default: {
+      if (/bind.*alibaba|alibaba cloud account/i.test(errorCode)) {
+        return errorMessage('modelscope_alibaba_bind_required', resetIn, lang);
+      }
       return isRu
         ? `❌ <b>Ошибка.</b>\n\n<code>${escapeHtml(errorCode.slice(0, 200))}</code>\n\nПопробуйте позже.`
         : `❌ <b>Something went wrong.</b>\n\n<code>${escapeHtml(errorCode.slice(0, 200))}</code>\n\nTry again later.`;
+    }
   }
 }
 

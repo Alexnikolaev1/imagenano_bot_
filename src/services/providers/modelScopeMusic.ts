@@ -3,6 +3,7 @@
 // Model page: https://www.modelscope.cn/models/AI-ModelScope/musicgen-small
 
 import { logError, logInfo, logWarn } from '../../utils/logger';
+import { extractModelScopeMessage, normalizeModelScopeError } from '../../utils/modelScopeErrors';
 import type { MusicResult } from '../../types';
 
 export interface ModelScopeMusicConfig {
@@ -88,15 +89,15 @@ export class ModelScopeMusicService {
       }
 
       if (!submitRes.ok) {
-        const msg = extractErrorMessage(submitBody, submitRes.status);
+        const msg = extractModelScopeMessage(submitBody);
         logWarn('ModelScope music submit rejected', { status: submitRes.status, body: submitBody });
-        if (
-          submitRes.status === 404 ||
-          /invalid model|model id|not found|unsupported|not exist/i.test(String(msg))
-        ) {
+        if (submitRes.status === 404) {
           return { success: false, error: 'modelscope_no_music_model' };
         }
-        return { success: false, error: msg };
+        return {
+          success: false,
+          error: normalizeModelScopeError(msg, submitRes.status),
+        };
       }
 
       const direct = extractAudioFromBody(submitBody);
@@ -229,15 +230,6 @@ function isSuccessStatus(status: string): boolean {
 
 function isFailureStatus(status: string): boolean {
   return status === 'FAILED' || status === 'CANCELED' || status === 'CANCELLED';
-}
-
-function extractErrorMessage(body: Record<string, unknown>, status: number): string {
-  return (
-    (body.message as string) ||
-    ((body.errors as Record<string, unknown>)?.message as string) ||
-    (body.error as string) ||
-    `ModelScope HTTP ${status}`
-  );
 }
 
 function extractAudioFromBody(
