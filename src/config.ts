@@ -60,7 +60,7 @@ export function loadConfig(): AppConfig {
     enhancePrompts: process.env.ENHANCE_PROMPTS !== 'false' && Boolean(googleApiKey),
     botUsername: process.env.BOT_USERNAME,
     defaultLang,
-    maxVideoRequestsPerDay: parseInt(process.env.MAX_VIDEO_REQUESTS_PER_DAY || '5', 10),
+    maxVideoRequestsPerDay: parseInt(process.env.MAX_VIDEO_REQUESTS_PER_DAY || '10', 10),
     videoEnabled: process.env.VIDEO_ENABLED !== 'false',
     maxMusicRequestsPerDay: parseInt(process.env.MAX_MUSIC_REQUESTS_PER_DAY || '5', 10),
     musicEnabled: process.env.MUSIC_ENABLED !== 'false',

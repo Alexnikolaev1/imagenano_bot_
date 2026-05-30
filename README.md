@@ -20,7 +20,7 @@ Vercel: переменные из `.env.example` → `npx ts-node scripts/setup-
 | `CLOUDFLARE_ACCOUNT_ID` | Workers AI |
 | `CLOUDFLARE_API_TOKEN` | Workers AI |
 | `MAX_REQUESTS_PER_DAY` | Лимит картинок (10) |
-| `MAX_VIDEO_REQUESTS_PER_DAY` | Лимит `/video` (5) |
+| `MAX_VIDEO_REQUESTS_PER_DAY` | Лимит `/video` (10) |
 | `MODELSCOPE_API_TOKEN` | ms-… token для `/music` и опционально mp4 `/video` |
 | `MAX_MUSIC_REQUESTS_PER_DAY` | Лимит `/music` (5) |
 
@@ -41,7 +41,7 @@ Vercel: переменные из `.env.example` → `npx ts-node scripts/setup-
 
 ```env
 VIDEO_PROVIDER=cloudflare_gif
-MAX_VIDEO_REQUESTS_PER_DAY=5
+MAX_VIDEO_REQUESTS_PER_DAY=10
 ```
 
 `MODELSCOPE_API_TOKEN` **не нужен** для GIF-видео. Если token добавлен, видео всё равно идёт через Cloudflare, пока не указан `VIDEO_PROVIDER=modelscope`.
@@ -51,7 +51,7 @@ MAX_VIDEO_REQUESTS_PER_DAY=5
 ```env
 VIDEO_PROVIDER=modelscope
 MODELSCOPE_API_TOKEN=ms-...
-MAX_VIDEO_REQUESTS_PER_DAY=5
+MAX_VIDEO_REQUESTS_PER_DAY=10
 ```
 
 При ошибке ModelScope бот автоматически отправит GIF (fallback по умолчанию).
