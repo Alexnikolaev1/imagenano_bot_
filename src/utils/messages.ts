@@ -1,4 +1,5 @@
 import type { Lang } from '../i18n';
+import { parseCloudflareError } from './cloudflareModel';
 
 export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = 'ru'): string {
   const isRu = lang === 'ru';
@@ -90,9 +91,31 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
         ? '⏳ <b>Музыка не успела сгенерироваться за отведённое время.</b>\n\nПопробуйте короче промпт или позже.'
         : '⏳ <b>Music generation timed out.</b>\n\nTry a shorter prompt or try again later.';
 
+    case 'cloudflare_model_not_found':
+      return isRu
+        ? '🎬 <b>Модель Cloudflare не найдена (404).</b>\n\nПроверьте на Vercel:\n<code>CLOUDFLARE_IMAGE_MODEL=@cf/black-forest-labs/flux-1-schnell</code>\n<code>CLOUDFLARE_EDIT_IMAGE_MODEL=@cf/black-forest-labs/flux-2-klein-4b</code>'
+        : '🎬 <b>Cloudflare model not found (404).</b>\n\nCheck on Vercel:\n<code>CLOUDFLARE_IMAGE_MODEL=@cf/black-forest-labs/flux-1-schnell</code>\n<code>CLOUDFLARE_EDIT_IMAGE_MODEL=@cf/black-forest-labs/flux-2-klein-4b</code>';
+
+    case 'cloudflare_unsupported_input':
+      return isRu
+        ? '🎬 <b>Cloudflare отклонил запрос (Unsupported input).</b>\n\nЧасто это неверная модель или формат. Для видео-GIF используйте flux-1-schnell + flux-2-klein-4b (см. .env.example).'
+        : '🎬 <b>Cloudflare rejected the request (Unsupported input).</b>\n\nUsually wrong model or format. For GIF video use flux-1-schnell + flux-2-klein-4b (see .env.example).';
+
+    case 'gif_failed':
+      return isRu
+        ? '🎬 <b>Не удалось собрать GIF-клип.</b>\n\nПопробуйте другой промпт или позже.'
+        : '🎬 <b>Could not build the GIF clip.</b>\n\nTry a different prompt or try again later.';
+
     default: {
       if (/bind.*alibaba|alibaba cloud account/i.test(errorCode)) {
         return errorMessage('modelscope_alibaba_bind_required', resetIn, lang);
+      }
+      if (/nsfw|3030/i.test(errorCode)) {
+        return errorMessage('safety_block', resetIn, lang);
+      }
+      const cfCode = parseCloudflareError(0, errorCode);
+      if (cfCode !== errorCode && cfCode !== 'Cloudflare AI error 0') {
+        return errorMessage(cfCode, resetIn, lang);
       }
       return isRu
         ? `❌ <b>Ошибка.</b>\n\n<code>${escapeHtml(errorCode.slice(0, 200))}</code>\n\nПопробуйте позже.`

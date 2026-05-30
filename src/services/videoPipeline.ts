@@ -31,7 +31,7 @@ export async function runVideoJob(params: VideoJobParams): Promise<void> {
     let result: VideoResult;
 
     if (type === 'text') {
-      logInfo('Video job: text-to-video', { userId, prompt: prompt.slice(0, 80) });
+      logInfo('Video job: text-to-video', { userId, prompt: prompt.slice(0, 80), provider: videoService.provider });
       result = await videoService.textToVideo(prompt);
     } else {
       const token = process.env.TELEGRAM_BOT_TOKEN!;

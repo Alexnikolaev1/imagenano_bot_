@@ -3,6 +3,12 @@
 import { GenerationResult } from '../types';
 import { PromptEnhancer } from './promptEnhancer';
 import { resizeForCloudflareInput } from '../utils/imageResize';
+import {
+  normalizeEditModel,
+  normalizeGenerateModel,
+  parseCloudflareError,
+  requiresMultipart,
+} from '../utils/cloudflareModel';
 import { logError, logInfo, notifyAdmin } from '../utils/logger';
 
 export interface ImageServiceConfig {
@@ -32,8 +38,8 @@ export class ImageService {
   constructor(config: ImageServiceConfig) {
     this.accountId = config.accountId;
     this.apiToken = config.apiToken;
-    this.generateModel = config.generateModel;
-    this.editModel = config.editModel;
+    this.generateModel = normalizeGenerateModel(config.generateModel);
+    this.editModel = normalizeEditModel(config.editModel);
     this.enhancer = config.enhancer;
   }
 
@@ -44,10 +50,12 @@ export class ImageService {
   async generateImage(prompt: string): Promise<GenerationResult> {
     logInfo('Generating image', { model: this.generateModel, prompt: prompt.slice(0, 100) });
 
-    const url = this.modelUrl(this.generateModel);
-
     try {
-      const res = await fetch(url, {
+      if (requiresMultipart(this.generateModel)) {
+        return await this.runMultipart(this.generateModel, prompt.slice(0, 2048));
+      }
+
+      const res = await fetch(this.modelUrl(this.generateModel), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.apiToken}`,
@@ -70,7 +78,7 @@ export class ImageService {
 
     try {
       const imageBuffer = await resizeForCloudflareInput(imageBase64);
-      const prompt = `Edit image 0: ${trimmed}`;
+      const prompt = `${trimmed}. Keep image 0 as the base reference.`;
       logInfo('Editing image', { model: this.editModel, instruction: trimmed.slice(0, 100) });
       return await this.runMultipart(this.editModel, prompt, imageBuffer);
     } catch (error) {
@@ -93,13 +101,16 @@ export class ImageService {
   private async runMultipart(
     model: string,
     prompt: string,
-    inputImage: Buffer
+    inputImage?: Buffer
   ): Promise<GenerationResult> {
     const form = new FormData();
     form.append('prompt', prompt.slice(0, 2048));
-    form.append('width', '1024');
-    form.append('height', '1024');
-    form.append('input_image_0', new Blob([inputImage], { type: 'image/jpeg' }), 'input.jpg');
+    form.append('width', '768');
+    form.append('height', '432');
+
+    if (inputImage) {
+      form.append('input_image_0', new Blob([inputImage], { type: 'image/jpeg' }), 'input.jpg');
+    }
 
     const res = await fetch(this.modelUrl(model), {
       method: 'POST',
@@ -107,7 +118,7 @@ export class ImageService {
       body: form,
     });
 
-    return this.parseResponse(res, 'multipart');
+    return this.parseResponse(res, inputImage ? 'multipart' : 'generate-multipart');
   }
 
   private async parseResponse(
@@ -123,7 +134,7 @@ export class ImageService {
     if (data.success === false) {
       const message = data.errors?.map((e) => e.message).join('; ') || 'unknown error';
       logError(`Cloudflare AI ${kind} failure`, { errors: data.errors });
-      return { success: false, error: message };
+      return { success: false, error: parseCloudflareError(400, JSON.stringify(data)) };
     }
 
     const base64 = data.result?.image;
@@ -149,14 +160,11 @@ export class ImageService {
   private handleHttpError(status: number, body: string): GenerationResult {
     logError('Cloudflare AI HTTP error', { status, body: body.slice(0, 300) });
 
-    if (status === 429) {
-      return { success: false, error: 'rate_limit' };
-    }
-    if (status === 401 || status === 403) {
+    const code = parseCloudflareError(status, body);
+    if (code === 'auth_error') {
       notifyAdmin(`Cloudflare AI auth error (${status}): ${body.slice(0, 200)}`);
-      return { success: false, error: 'auth_error' };
     }
-    return { success: false, error: `Cloudflare AI error ${status}` };
+    return { success: false, error: code };
   }
 }
 

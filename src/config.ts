@@ -1,5 +1,7 @@
 // src/config.ts — single source of truth for environment configuration
 
+import { normalizeEditModel, normalizeGenerateModel } from './utils/cloudflareModel';
+
 export interface AppConfig {
   telegramToken: string;
   /** Cloudflare Workers AI credentials (image generation) */
@@ -48,10 +50,8 @@ export function loadConfig(): AppConfig {
     telegramToken,
     cloudflareAccountId,
     cloudflareApiToken,
-    cloudflareImageModel:
-      process.env.CLOUDFLARE_IMAGE_MODEL || '@cf/black-forest-labs/flux-1-schnell',
-    cloudflareEditImageModel:
-      process.env.CLOUDFLARE_EDIT_IMAGE_MODEL || '@cf/black-forest-labs/flux-2-klein-4b',
+    cloudflareImageModel: normalizeGenerateModel(process.env.CLOUDFLARE_IMAGE_MODEL),
+    cloudflareEditImageModel: normalizeEditModel(process.env.CLOUDFLARE_EDIT_IMAGE_MODEL),
     googleApiKey,
     geminiTextModel: process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
     adminChatId: process.env.ADMIN_CHAT_ID,
