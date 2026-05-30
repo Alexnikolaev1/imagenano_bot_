@@ -11,7 +11,8 @@ const SCENE_PREFIX = 'Cinematic 16:9 widescreen film still: ';
 export class CloudflareGifVideoService {
   constructor(
     private imageService: ImageService,
-    private frameDelayMs = 900
+    private frameDelayMs = 130,
+    private crossfadeSteps = 6
   ) {}
 
   async textToVideo(prompt: string): Promise<VideoResult> {
@@ -67,8 +68,14 @@ export class CloudflareGifVideoService {
 
   private async toGifResult(frames: string[], previewFallback: string): Promise<VideoResult> {
     try {
-      const gif = await encodeGifFromBase64Frames(frames, this.frameDelayMs);
-      logInfo('Cloudflare GIF encoded', { bytes: gif.length, frames: frames.length });
+      const gif = await encodeGifFromBase64Frames(frames, this.frameDelayMs, {
+        crossfadeSteps: this.crossfadeSteps,
+      });
+      logInfo('Cloudflare GIF encoded', {
+        bytes: gif.length,
+        keyframes: frames.length,
+        crossfadeSteps: this.crossfadeSteps,
+      });
       return {
         success: true,
         mode: 'gif',

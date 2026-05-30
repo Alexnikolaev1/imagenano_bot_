@@ -124,7 +124,7 @@ export const ru: Record<TranslationKey, string> = {
   needVideoPrompt:
     '🎬 Укажите описание после <code>/video</code>\n\nПример: <code>/video волны ночью на берегу</code>',
 
-  musicGenerating: '🎵 Генерирую музыку…\n\nОбычно 5–15 секунд. Подождите, пожалуйста.',
+  musicGenerating: '🎵 Генерирую музыку…\n\nОбычно 15–60 секунд (первый раз до 2 мин). Подождите, пожалуйста.',
   musicDoneSending: '✅ Трек готов ({seconds} с). Отправляю…',
   musicSent: '✅ Музыка отправлена!',
   musicGeneratedCaption: '🎵 <b>Сгенерированная музыка:</b>',
@@ -133,9 +133,9 @@ export const ru: Record<TranslationKey, string> = {
 <code>/music описание музыки</code>
 
 Пример:
-<code>/music спокойный lo-fi hip-hop с мягким пианино и шумом пластинки</code>
+<code>/music спокойный lo-fi hip-hop с мягким пианино</code>
 
-<i>Бесплатно через ModelScope MusicGen-Small</i> (~10 сек, WAV). Нужны <code>MODELSCOPE_API_TOKEN</code> и привязка Alibaba Cloud на modelscope.cn.`,
+<i>Бесплатно через Hugging Face MusicGen</i> (~10 сек, WAV). Нужен <code>HUGGINGFACE_TOKEN</code> на Vercel.`,
   musicNotConfigured:
-    '🎵 Музыка отключена. Добавьте <code>MODELSCOPE_API_TOKEN</code> (ms-…) на modelscope.cn. Для генерации также нужна привязка Alibaba Cloud в профиле.',
+    '🎵 Музыка отключена. Добавьте <code>HUGGINGFACE_TOKEN</code> на huggingface.co → Settings → Access Tokens (Read).',
 };

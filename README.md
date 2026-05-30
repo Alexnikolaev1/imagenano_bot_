@@ -1,6 +1,6 @@
 # Imagnano — Telegram AI Image Bot
 
-Telegram-бот: **Cloudflare Flux** для картинок, **`/video`** — короткие клипы, **`/music`** — MusicGen через ModelScope.
+Telegram-бот: **Cloudflare Flux** для картинок, **`/video`** — короткий GIF-клип (2 кадра), **`/music`** — MusicGen через Hugging Face.
 
 ## Быстрый старт
 
@@ -21,7 +21,7 @@ Vercel: переменные из `.env.example` → `npx ts-node scripts/setup-
 | `CLOUDFLARE_API_TOKEN` | Workers AI |
 | `MAX_REQUESTS_PER_DAY` | Лимит картинок (10) |
 | `MAX_VIDEO_REQUESTS_PER_DAY` | Лимит `/video` (10) |
-| `MODELSCOPE_API_TOKEN` | ms-… token для `/music` и опционально mp4 `/video` |
+| `HUGGINGFACE_TOKEN` | hf_… token для `/music` (huggingface.co) |
 | `MAX_MUSIC_REQUESTS_PER_DAY` | Лимит `/music` (5) |
 
 ## `/video` — выбранная стратегия (бесплатно каждый день)
@@ -56,20 +56,25 @@ MAX_VIDEO_REQUESTS_PER_DAY=10
 
 При ошибке ModelScope бот автоматически отправит GIF (fallback по умолчанию).
 
-## `/music` — MusicGen-Small
+## `/music` — Hugging Face MusicGen (рекомендуется)
 
 | Параметр | Значение |
 |----------|----------|
-| Модель | `AI-ModelScope/musicgen-small` |
-| Требования | `MODELSCOPE_API_TOKEN` **+ привязка Alibaba Cloud** на modelscope.cn |
+| Модель | `facebook/musicgen-small` |
+| Требования | `HUGGINGFACE_TOKEN` (бесплатно, без карты и Alibaba) |
 | Длина | ~10 сек WAV |
 
+1. [huggingface.co](https://huggingface.co) → Settings → **Access Tokens** → New (Read)
+2. Vercel:
+
 ```env
-MODELSCOPE_API_TOKEN=ms-...
+HUGGINGFACE_TOKEN=hf_...
 MAX_MUSIC_REQUESTS_PER_DAY=5
 ```
 
-> ⚠️ Ошибка «Please bind your Alibaba Cloud account» — войдите на modelscope.cn → профиль → привязать Alibaba Cloud (бесплатная верификация, не оплата DashScope).
+Первый запрос может занять 1–2 мин (холодный старт модели).
+
+ModelScope (`MODELSCOPE_API_TOKEN`) — опционально, но нужен **китайский** Aliyun, International не подходит.
 
 ## Команды
 

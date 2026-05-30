@@ -1,6 +1,7 @@
-// src/services/musicPipeline.ts — text-to-music via ModelScope MusicGen
+// src/services/musicPipeline.ts — text-to-music via Hugging Face or ModelScope MusicGen
 
 import { MusicService } from './musicService';
+import { consumeMusicRateLimit } from '../utils/rateLimit';
 import { sendAudio, editMessage } from './telegramSender';
 import { downloadBufferFromUrl } from '../utils/fileUtils';
 import { errorMessage, escapeHtml } from '../utils/messages';
@@ -15,16 +16,22 @@ export interface MusicJobParams {
   userId: number;
   prompt: string;
   lang: Lang;
+  maxMusicRequestsPerDay: number;
   musicService: MusicService;
   t: TranslateFn;
 }
 
 export async function runMusicJob(params: MusicJobParams): Promise<void> {
-  const { chatId, statusMessageId, userId, prompt, musicService, t, lang } = params;
+  const { chatId, statusMessageId, userId, prompt, musicService, t, lang, maxMusicRequestsPerDay } =
+    params;
   const started = Date.now();
 
   try {
-    logInfo('Music job: text-to-music', { userId, prompt: prompt.slice(0, 80) });
+    logInfo('Music job: text-to-music', {
+      userId,
+      prompt: prompt.slice(0, 80),
+      provider: musicService.provider,
+    });
     const result = await musicService.textToMusic(prompt);
 
     if (!result.success) {
@@ -44,6 +51,8 @@ export async function runMusicJob(params: MusicJobParams): Promise<void> {
       });
       return;
     }
+
+    consumeMusicRateLimit(userId, maxMusicRequestsPerDay);
 
     const elapsed = Math.round((Date.now() - started) / 1000);
     const caption = `${t('musicGeneratedCaption')} <i>${escapeHtml(prompt.slice(0, 180))}</i>`;

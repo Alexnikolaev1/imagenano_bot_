@@ -122,7 +122,7 @@ Example:
   needVideoPrompt:
     '🎬 Add a description after <code>/video</code>\n\nExample: <code>/video waves on the shore at night</code>',
 
-  musicGenerating: '🎵 Generating music…\n\nUsually 5–15 seconds. Please wait.',
+  musicGenerating: '🎵 Generating music…\n\nUsually 15–60 seconds (first run may take up to 2 min). Please wait.',
   musicDoneSending: '✅ Track ready ({seconds}s). Sending…',
   musicSent: '✅ Music sent!',
   musicGeneratedCaption: '🎵 <b>Generated music:</b>',
@@ -133,9 +133,9 @@ Example:
 Example:
 <code>/music calm lo-fi hip hop with soft piano and vinyl crackle</code>
 
-<i>Free via ModelScope MusicGen-Small</i> (~10 sec clip, WAV). Requires <code>MODELSCOPE_API_TOKEN</code> and Alibaba Cloud linked on modelscope.cn.`,
+<i>Free via Hugging Face MusicGen</i> (~10 sec WAV). Set <code>HUGGINGFACE_TOKEN</code> on Vercel.`,
   musicNotConfigured:
-    '🎵 Music is disabled. Add <code>MODELSCOPE_API_TOKEN</code> (ms-…) from modelscope.cn. Generation also requires Alibaba Cloud linked in your profile.',
+    '🎵 Music is disabled. Add <code>HUGGINGFACE_TOKEN</code> from huggingface.co → Settings → Access Tokens (Read).',
 } as const;
 
 export type TranslationKey = keyof typeof en;

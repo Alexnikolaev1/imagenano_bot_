@@ -141,7 +141,8 @@ export function createVideoServiceFromEnv(imageService?: ImageService): VideoSer
 
   const pollIntervalMs = parseInt(process.env.VIDEO_POLL_INTERVAL_MS || '5000', 10);
   const maxWaitMs = parseInt(process.env.VIDEO_MAX_WAIT_MS || '280000', 10);
-  const gifDelayMs = parseInt(process.env.VIDEO_GIF_FRAME_DELAY_MS || '900', 10);
+  const gifDelayMs = parseInt(process.env.VIDEO_GIF_FRAME_DELAY_MS || '130', 10);
+  const gifCrossfadeSteps = parseInt(process.env.VIDEO_GIF_CROSSFADE_STEPS || '6', 10);
 
   const t2vDash = process.env.WAN_T2V_MODEL || 'wan2.1-t2v-turbo';
   const i2vDash = process.env.WAN_I2V_MODEL || 'wan2.1-i2v-plus';
@@ -166,7 +167,7 @@ export function createVideoServiceFromEnv(imageService?: ImageService): VideoSer
   if (needsImageService && !imageService) return null;
 
   const gifService = imageService
-    ? new CloudflareGifVideoService(imageService, gifDelayMs)
+    ? new CloudflareGifVideoService(imageService, gifDelayMs, gifCrossfadeSteps)
     : undefined;
   const fallbackGif =
     gifService && process.env.VIDEO_FALLBACK !== 'false' ? gifService : undefined;

@@ -91,6 +91,31 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
         ? '⏳ <b>Музыка не успела сгенерироваться за отведённое время.</b>\n\nПопробуйте короче промпт или позже.'
         : '⏳ <b>Music generation timed out.</b>\n\nTry a shorter prompt or try again later.';
 
+    case 'music_not_configured':
+      return isRu
+        ? '🎵 <b>Музыка не настроена.</b>\n\nДобавьте <code>HUGGINGFACE_TOKEN</code> (huggingface.co → Settings → Access Tokens).'
+        : '🎵 <b>Music is not configured.</b>\n\nAdd <code>HUGGINGFACE_TOKEN</code> (huggingface.co → Settings → Access Tokens).';
+
+    case 'hf_model_loading':
+      return isRu
+        ? '⏳ <b>Модель Hugging Face прогревается.</b>\n\nПервый запрос может занять 1–2 минуты. Попробуйте ещё раз через минуту.'
+        : '⏳ <b>Hugging Face model is warming up.</b>\n\nFirst request can take 1–2 minutes. Try again in a minute.';
+
+    case 'hf_auth_error':
+      return isRu
+        ? '🔑 <b>Неверный Hugging Face token.</b>\n\nПроверьте <code>HUGGINGFACE_TOKEN</code> на huggingface.co (нужен Read).'
+        : '🔑 <b>Invalid Hugging Face token.</b>\n\nCheck <code>HUGGINGFACE_TOKEN</code> on huggingface.co (Read scope).';
+
+    case 'hf_timeout':
+      return isRu
+        ? '⏳ <b>Hugging Face не ответил вовремя.</b>\n\nМодель могла быть холодной — попробуйте снова.'
+        : '⏳ <b>Hugging Face timed out.</b>\n\nThe model may have been cold — try again.';
+
+    case 'need_music_prompt':
+      return isRu
+        ? '🎵 <b>Нужно описание музыки.</b>\n\nПример:\n<code>/music calm lo-fi jazz with piano</code>'
+        : '🎵 <b>Music prompt required.</b>\n\nExample:\n<code>/music calm lo-fi jazz with piano</code>';
+
     case 'cloudflare_model_not_found':
       return isRu
         ? '🎬 <b>Модель Cloudflare не найдена (404).</b>\n\nПроверьте на Vercel:\n<code>CLOUDFLARE_IMAGE_MODEL=@cf/black-forest-labs/flux-1-schnell</code>\n<code>CLOUDFLARE_EDIT_IMAGE_MODEL=@cf/black-forest-labs/flux-2-klein-4b</code>'

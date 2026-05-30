@@ -40,6 +40,7 @@ export function registerMusicHandlers(bot: Bot<AppContext>): void {
         userId,
         prompt: rawPrompt,
         lang,
+        maxMusicRequestsPerDay: ctx.config.maxMusicRequestsPerDay,
         musicService: ctx.musicService,
         t: ctx.t,
       });
