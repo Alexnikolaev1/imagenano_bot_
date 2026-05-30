@@ -1,6 +1,6 @@
 // src/services/rateLimitGuard.ts
 
-import { checkRateLimit, checkVideoRateLimit, checkMusicRateLimit } from '../utils/rateLimit';
+import { peekRateLimit, peekVideoRateLimit, peekMusicRateLimit } from '../utils/rateLimit';
 import { errorMessage } from '../utils/messages';
 import type { Lang } from '../i18n';
 
@@ -9,7 +9,7 @@ export function assertRateLimit(
   maxPerDay: number,
   lang: Lang
 ): { ok: true; remaining: number } | { ok: false; message: string } {
-  const limit = checkRateLimit(userId, maxPerDay);
+  const limit = peekRateLimit(userId, maxPerDay);
   if (!limit.allowed) {
     return {
       ok: false,
@@ -24,7 +24,7 @@ export function assertVideoRateLimit(
   maxPerDay: number,
   lang: Lang
 ): { ok: true; remaining: number } | { ok: false; message: string } {
-  const limit = checkVideoRateLimit(userId, maxPerDay);
+  const limit = peekVideoRateLimit(userId, maxPerDay);
   if (!limit.allowed) {
     return {
       ok: false,
@@ -39,7 +39,7 @@ export function assertMusicRateLimit(
   maxPerDay: number,
   lang: Lang
 ): { ok: true; remaining: number } | { ok: false; message: string } {
-  const limit = checkMusicRateLimit(userId, maxPerDay);
+  const limit = peekMusicRateLimit(userId, maxPerDay);
   if (!limit.allowed) {
     return {
       ok: false,

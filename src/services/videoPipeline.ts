@@ -4,6 +4,7 @@ import { VideoService } from './videoService';
 import { sendAnimation, sendPhoto, sendVideo, editMessage } from './telegramSender';
 import { downloadTelegramFile, bufferToBase64 } from '../utils/fileUtils';
 import { errorMessage, escapeHtml } from '../utils/messages';
+import { consumeVideoRateLimit } from '../utils/rateLimit';
 import { logError, logInfo } from '../utils/logger';
 import type { TranslateFn } from '../context';
 import type { Lang } from '../i18n';
@@ -19,12 +20,14 @@ export interface VideoJobParams {
   prompt: string;
   fileId?: string;
   lang: Lang;
+  maxVideoRequestsPerDay: number;
   videoService: VideoService;
   t: TranslateFn;
 }
 
 export async function runVideoJob(params: VideoJobParams): Promise<void> {
-  const { chatId, statusMessageId, userId, type, prompt, videoService, t, lang } = params;
+  const { chatId, statusMessageId, userId, type, prompt, videoService, t, lang, maxVideoRequestsPerDay } =
+    params;
   const started = Date.now();
 
   try {
@@ -53,6 +56,8 @@ export async function runVideoJob(params: VideoJobParams): Promise<void> {
       );
       return;
     }
+
+    consumeVideoRateLimit(userId, maxVideoRequestsPerDay);
 
     const elapsed = Math.round((Date.now() - started) / 1000);
     const caption = buildCaption(result, type, prompt, t);

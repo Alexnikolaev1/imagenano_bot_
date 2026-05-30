@@ -53,6 +53,7 @@ export function registerVideoPhotoHandlers(bot: Bot<AppContext>): void {
         prompt,
         fileId,
         lang,
+        maxVideoRequestsPerDay: ctx.config.maxVideoRequestsPerDay,
         videoService: ctx.videoService,
         t: ctx.t,
       });

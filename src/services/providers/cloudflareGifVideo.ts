@@ -1,14 +1,12 @@
-// Free short looping GIF via Cloudflare Flux (~2 frames, ~160 neurons total).
-// Best free daily option for a Vercel bot — real motion, no paid video API.
+// Free short looping GIF via Cloudflare Flux (1–2 frames).
 
 import type { ImageService } from '../imageService';
 import type { VideoResult } from '../../types';
-import { encodeGifFromBase64Frames } from '../../utils/gifEncode';
+import { encodeGifFromBase64Frames, encodeStaticGifFromBase64 } from '../../utils/gifEncode';
 import { resizeForCloudflareInput } from '../../utils/imageResize';
 import { logInfo, logWarn } from '../../utils/logger';
 
 const SCENE_PREFIX = 'Cinematic 16:9 widescreen film still: ';
-const MOTION_SUFFIX = ', same scene a moment later with subtle natural movement';
 
 export class CloudflareGifVideoService {
   constructor(
@@ -25,17 +23,22 @@ export class CloudflareGifVideoService {
       return { success: false, error: frame1.error || 'gif_failed' };
     }
 
+    // One Cloudflare call is enough for a looping clip; optional 2nd frame for motion.
     const frame2 = await this.imageService.generateImage(
-      `${SCENE_PREFIX}${scene}${MOTION_SUFFIX}`
+      `${SCENE_PREFIX}${scene}, slightly later moment, subtle movement`
     );
-    if (!frame2.success || !frame2.imageData) {
-      logWarn('Cloudflare GIF: second frame failed, looping first frame', {
+    const frames =
+      frame2.success && frame2.imageData
+        ? [frame1.imageData, frame2.imageData]
+        : [frame1.imageData, frame1.imageData];
+
+    if (!frame2.success) {
+      logWarn('Cloudflare GIF: second frame skipped, looping first frame', {
         error: frame2.error,
       });
-      return this.toGifResult([frame1.imageData, frame1.imageData]);
     }
 
-    return this.toGifResult([frame1.imageData, frame2.imageData]);
+    return this.toGifResult(frames, frame1.imageData);
   }
 
   async imageToVideo(prompt: string, imageBase64: string, mimeType: string): Promise<VideoResult> {
@@ -53,18 +56,19 @@ export class CloudflareGifVideoService {
 
     const frame2 = await this.imageService.editImage(imageBase64, mimeType, motion);
     if (!frame2.success || !frame2.imageData) {
-      logWarn('Cloudflare GIF: photo edit failed, falling back to text frames', {
+      logWarn('Cloudflare GIF: photo edit failed, looping original photo', {
         error: frame2.error,
       });
-      return this.textToVideo(`${motion}, cinematic scene`);
+      return this.toGifResult([frame1B64, frame1B64], frame1B64);
     }
 
-    return this.toGifResult([frame1B64, frame2.imageData]);
+    return this.toGifResult([frame1B64, frame2.imageData], frame1B64);
   }
 
-  private async toGifResult(frames: string[]): Promise<VideoResult> {
+  private async toGifResult(frames: string[], previewFallback: string): Promise<VideoResult> {
     try {
       const gif = await encodeGifFromBase64Frames(frames, this.frameDelayMs);
+      logInfo('Cloudflare GIF encoded', { bytes: gif.length, frames: frames.length });
       return {
         success: true,
         mode: 'gif',
@@ -72,8 +76,27 @@ export class CloudflareGifVideoService {
         mimeType: 'image/gif',
       };
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { success: false, error: message };
+      logWarn('Cloudflare GIF encode failed, trying static GIF', { err });
     }
+
+    try {
+      const gif = await encodeStaticGifFromBase64(previewFallback);
+      logInfo('Cloudflare static GIF encoded', { bytes: gif.length });
+      return {
+        success: true,
+        mode: 'gif',
+        imageBase64: gif.toString('base64'),
+        mimeType: 'image/gif',
+      };
+    } catch (err) {
+      logWarn('Cloudflare static GIF failed, sending preview still', { err });
+    }
+
+    return {
+      success: true,
+      mode: 'preview',
+      imageBase64: previewFallback,
+      mimeType: 'image/jpeg',
+    };
   }
 }

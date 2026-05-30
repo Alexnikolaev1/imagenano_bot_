@@ -41,6 +41,7 @@ export function registerVideoHandlers(bot: Bot<AppContext>): void {
         type: 'text',
         prompt: rawPrompt,
         lang,
+        maxVideoRequestsPerDay: ctx.config.maxVideoRequestsPerDay,
         videoService: ctx.videoService,
         t: ctx.t,
       });
