@@ -129,6 +129,46 @@ export function getVideoRateLimitInfo(userId: number, maxPerDay: number): {
   return getRateLimitInfoKeyed(`video:${userId}`, maxPerDay);
 }
 
+export function peekVideoGifRateLimit(userId: number, maxPerDay: number): {
+  allowed: boolean;
+  remaining: number;
+  resetIn: number;
+} {
+  return checkRateLimitKeyed(`videogif:${userId}`, maxPerDay, false);
+}
+
+export function consumeVideoGifRateLimit(userId: number, maxPerDay: number): void {
+  checkRateLimitKeyed(`videogif:${userId}`, maxPerDay, true);
+}
+
+export function getVideoGifRateLimitInfo(userId: number, maxPerDay: number): {
+  used: number;
+  remaining: number;
+  resetIn: number;
+} {
+  return getRateLimitInfoKeyed(`videogif:${userId}`, maxPerDay);
+}
+
+export function peekFalVideoRateLimit(userId: number, maxPerDay: number): {
+  allowed: boolean;
+  remaining: number;
+  resetIn: number;
+} {
+  return checkRateLimitKeyed(`fal_video:${userId}`, maxPerDay, false);
+}
+
+export function consumeFalVideoRateLimit(userId: number, maxPerDay: number): void {
+  checkRateLimitKeyed(`fal_video:${userId}`, maxPerDay, true);
+}
+
+export function getFalVideoRateLimitInfo(userId: number, maxPerDay: number): {
+  used: number;
+  remaining: number;
+  resetIn: number;
+} {
+  return getRateLimitInfoKeyed(`fal_video:${userId}`, maxPerDay);
+}
+
 export function checkMusicRateLimit(userId: number, maxPerDay: number): {
   allowed: boolean;
   remaining: number;

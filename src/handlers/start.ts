@@ -61,7 +61,8 @@ export function registerStartHandlers(bot: Bot<AppContext>): void {
       const isRu = lang === 'ru';
       await ctx.api.setMyCommands([
         { command: 'generate', description: isRu ? 'Сгенерировать изображение' : 'Generate an image' },
-        { command: 'video', description: isRu ? 'Видео из текста' : 'Text to video' },
+        { command: 'video', description: isRu ? 'MP4-видео (fal.ai)' : 'MP4 video (fal.ai)' },
+        { command: 'videogif', description: isRu ? 'Бесплатный GIF-клип' : 'Free looping GIF clip' },
         { command: 'music', description: isRu ? 'Музыка из текста' : 'Text to music' },
         { command: 'style', description: isRu ? 'Художественный стиль' : 'Art style preset' },
         { command: 'stats', description: isRu ? 'Лимит на сегодня' : 'Usage stats' },

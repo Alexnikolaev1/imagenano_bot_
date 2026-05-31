@@ -9,6 +9,8 @@ import { logInfo, logWarn } from '../../utils/logger';
 const SCENE_PREFIX = 'Cinematic 16:9 widescreen film still: ';
 
 export class CloudflareGifVideoService {
+  readonly provider = 'cloudflare_gif';
+
   constructor(
     private imageService: ImageService,
     private frameDelayMs = 130,

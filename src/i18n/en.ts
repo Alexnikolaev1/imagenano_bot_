@@ -1,14 +1,16 @@
 export const en = {
   welcome: `👋 <b>Welcome to Imagnano!</b>
 
-I create images (Cloudflare Flux), short video clips, and music (ModelScope MusicGen).
+I create images (Cloudflare Flux), real MP4 video (fal.ai), free GIF clips, and music (Hugging Face MusicGen).
 
 <b>Quick start:</b>
 • Send any text — I'll generate an image
 • <code>/generate sunset over Tokyo, cyberpunk</code>
-• <code>/video a cat walking in snow</code> — text to video
+• <code>/video a cat walking in snow</code> — real MP4 (fal.ai, 5/day)
+• <code>/videogif waves on the beach</code> — free looping GIF (10/day)
 • <code>/music calm lo-fi jazz with piano</code> — text to music
-• Photo + <code>/video gentle camera zoom</code> — image to video
+• Photo + <code>/video gentle camera zoom</code> — animate photo to MP4
+• Photo + <code>/videogif subtle wind in hair</code> — GIF from photo
 • Send a photo with a caption to edit it
 • <code>/style</code> — pick an art style
 
@@ -30,9 +32,15 @@ Photo + caption: <code>/variation</code>
 <b>Style:</b>
 /style — choose preset (anime, photo, watercolor…)
 
-<b>Video (~1–5 min):</b>
+<b>Video MP4 (~1–10 min, fal.ai):</b>
 /video &lt;prompt&gt;
 Photo + caption <code>/video …</code>
+Limit: 5 per day
+
+<b>Video GIF (free, Cloudflare):</b>
+/videogif &lt;prompt&gt;
+Photo + caption <code>/videogif …</code>
+Limit: 10 per day
 
 <b>Music (~5–15 sec, MusicGen):</b>
 /music &lt;prompt&gt;
@@ -106,7 +114,7 @@ Send a photo with caption <code>/variation</code>`,
   videoFromImageCaption: '🎬 <b>From your photo:</b>',
   videoGifFromImageCaption: '🎞 <b>Looping clip from photo:</b>',
   videoPreviewFromImageCaption: '🖼 <b>Cinematic still from photo (preview):</b>',
-  videoHowTo: `🎬 <b>Text-to-video</b>
+  videoHowTo: `🎬 <b>Real MP4 video (fal.ai)</b>
 
 <code>/video your scene description</code>
 
@@ -116,9 +124,30 @@ Example:
 <b>Image-to-video:</b> send a photo with caption:
 <code>/video slow zoom in, leaves moving in the wind</code>
 
-<i>Free by default:</i> short looping GIF via Cloudflare (Cloudflare keys only). mp4 via ModelScope requires <code>VIDEO_PROVIDER=modelscope</code> and Alibaba Cloud linked on modelscope.cn.`,
+<i>Limit:</i> 5 MP4 videos per day. Requires <code>FAL_KEY</code> on the server.
+
+<b>Free GIF alternative:</b> <code>/videogif …</code> — looping clip via Cloudflare.`,
+  falVideoNotConfigured:
+    '🎬 <b>MP4 video is not configured.</b>\n\nAdd <code>FAL_KEY</code> from fal.ai → Dashboard → API Keys.',
+  videoGifHowTo: `🎞 <b>Free looping GIF (Cloudflare)</b>
+
+<code>/videogif your scene description</code>
+
+Example:
+<code>/videogif a cat on a windowsill, rain outside, cozy mood</code>
+
+<b>From photo:</b> send a photo with caption:
+<code>/videogif gentle breeze, hair moving slightly</code>
+
+<i>Limit:</i> 10 GIF clips per day. No extra API keys beyond Cloudflare.`,
+  videoGifNotConfigured:
+    '🎞 GIF video is disabled. Set <code>VIDEO_GIF_ENABLED=true</code> (default) and ensure Cloudflare keys are set.',
+  videoGifGenerating: '🎞 Generating GIF clip…\n\nUsually 30–90 seconds.',
+  videoGifFromImage: '🎞 Animating your photo into a GIF…\n\nUsually 30–90 seconds.',
+  needVideoGifPrompt:
+    '🎞 Add a description after <code>/videogif</code>\n\nExample: <code>/videogif waves on the shore at night</code>',
   videoNotConfigured:
-    '🎬 Video is disabled. Cloudflare keys are enough for free GIF mode, or set <code>VIDEO_ENABLED=true</code>.',
+    '🎬 Video is disabled. Add <code>FAL_KEY</code> for MP4 or use <code>/videogif</code> for free GIF.',
   needVideoPrompt:
     '🎬 Add a description after <code>/video</code>\n\nExample: <code>/video waves on the shore at night</code>',
 

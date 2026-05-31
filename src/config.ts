@@ -20,9 +20,14 @@ export interface AppConfig {
   enhancePrompts: boolean;
   botUsername?: string;
   defaultLang: 'ru' | 'en';
-  /** Wan 2.1 video — separate daily limit */
+  /** Legacy alias — same as maxVideoGifRequestsPerDay */
   maxVideoRequestsPerDay: number;
-  videoEnabled: boolean;
+  /** Free Cloudflare GIF clips (/videogif) */
+  maxVideoGifRequestsPerDay: number;
+  videoGifEnabled: boolean;
+  /** Real MP4 via fal.ai (/video) */
+  maxFalVideoRequestsPerDay: number;
+  falVideoEnabled: boolean;
   /** MusicGen via ModelScope — separate daily limit */
   maxMusicRequestsPerDay: number;
   musicEnabled: boolean;
@@ -60,8 +65,21 @@ export function loadConfig(): AppConfig {
     enhancePrompts: process.env.ENHANCE_PROMPTS !== 'false' && Boolean(googleApiKey),
     botUsername: process.env.BOT_USERNAME,
     defaultLang,
-    maxVideoRequestsPerDay: parseInt(process.env.MAX_VIDEO_REQUESTS_PER_DAY || '10', 10),
-    videoEnabled: process.env.VIDEO_ENABLED !== 'false',
+    maxVideoGifRequestsPerDay: parseInt(
+      process.env.MAX_VIDEO_GIF_REQUESTS_PER_DAY ||
+        process.env.MAX_VIDEO_REQUESTS_PER_DAY ||
+        '10',
+      10
+    ),
+    maxVideoRequestsPerDay: parseInt(
+      process.env.MAX_VIDEO_GIF_REQUESTS_PER_DAY ||
+        process.env.MAX_VIDEO_REQUESTS_PER_DAY ||
+        '10',
+      10
+    ),
+    videoGifEnabled: process.env.VIDEO_GIF_ENABLED !== 'false',
+    maxFalVideoRequestsPerDay: parseInt(process.env.MAX_FAL_VIDEO_REQUESTS_PER_DAY || '5', 10),
+    falVideoEnabled: process.env.FAL_VIDEO_ENABLED !== 'false',
     maxMusicRequestsPerDay: parseInt(process.env.MAX_MUSIC_REQUESTS_PER_DAY || '5', 10),
     musicEnabled: process.env.MUSIC_ENABLED !== 'false',
   };

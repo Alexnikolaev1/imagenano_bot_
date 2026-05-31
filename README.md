@@ -1,6 +1,6 @@
 # Imagnano — Telegram AI Image Bot
 
-Telegram-бот: **Cloudflare Flux** для картинок, **`/video`** — короткий GIF-клип (2 кадра), **`/music`** — MusicGen через Hugging Face.
+Telegram-бот: **Cloudflare Flux** для картинок, **`/video`** — настоящее MP4 через [fal.ai](https://fal.ai/), **`/videogif`** — бесплатный GIF-клип, **`/music`** — MusicGen через Hugging Face.
 
 ## Быстрый старт
 
@@ -19,69 +19,67 @@ Vercel: переменные из `.env.example` → `npx ts-node scripts/setup-
 | `TELEGRAM_BOT_TOKEN` | @BotFather |
 | `CLOUDFLARE_ACCOUNT_ID` | Workers AI |
 | `CLOUDFLARE_API_TOKEN` | Workers AI |
+| `FAL_KEY` | API-ключ fal.ai для `/video` (MP4) |
 | `MAX_REQUESTS_PER_DAY` | Лимит картинок (10) |
-| `MAX_VIDEO_REQUESTS_PER_DAY` | Лимит `/video` (10) |
+| `MAX_FAL_VIDEO_REQUESTS_PER_DAY` | Лимит `/video` MP4 (5) |
+| `MAX_VIDEO_GIF_REQUESTS_PER_DAY` | Лимит `/videogif` (10) |
 | `HUGGINGFACE_TOKEN` | hf_… token для `/music` (huggingface.co) |
 | `MAX_MUSIC_REQUESTS_PER_DAY` | Лимит `/music` (5) |
 
-## `/video` — выбранная стратегия (бесплатно каждый день)
+## `/video` — MP4 через fal.ai
 
-После изучения документации:
+| Параметр | Значение |
+|----------|----------|
+| Команда | `/video описание` или фото + `/video …` |
+| Лимит | **5 MP4 в день** (`MAX_FAL_VIDEO_REQUESTS_PER_DAY`) |
+| Модели по умолчанию | Wan 2.2 A14B (T2V + I2V turbo) |
+| Оплата | С баланса fal.ai (~$0.05/сек для Wan) |
 
-| Вариант | Бесплатно? | Результат |
-|---------|-----------|-----------|
-| **Cloudflare GIF** (по умолчанию) | ✅ 10k neurons/день | 2 кадра Flux → зацикленный GIF |
-| **ModelScope API** (`ms-` token) | ⚠️ нужна привязка Alibaba Cloud на modelscope.cn | mp4 Wan |
-| **DashScope** | ❌ оплата за секунду | Только при `VIDEO_PROVIDER=dashscope` |
-| **Civision (браузер)** | Magic Cubes/день | Нет REST API для бота |
-
-### Рекомендуемая конфигурация Vercel
-
-**Только бесплатно (рекомендуется — достаточно ключей Cloudflare):**
+1. [fal.ai](https://fal.ai) → Dashboard → **API Keys**
+2. Vercel:
 
 ```env
-VIDEO_PROVIDER=cloudflare_gif
-MAX_VIDEO_REQUESTS_PER_DAY=10
+FAL_KEY=...
+MAX_FAL_VIDEO_REQUESTS_PER_DAY=5
+# опционально:
+# FAL_T2V_MODEL=fal-ai/wan/v2.2-a14b/text-to-video
+# FAL_I2V_MODEL=fal-ai/wan/v2.2-a14b/image-to-video/turbo
 ```
 
-`MODELSCOPE_API_TOKEN` **не нужен** для GIF-видео. Если token добавлен, видео всё равно идёт через Cloudflare, пока не указан `VIDEO_PROVIDER=modelscope`.
+Другие модели (Kling, Veo и т.д.) — укажите ID с [fal.ai/models](https://fal.ai/models).
 
-**mp4 через ModelScope** (нужна привязка Alibaba Cloud на modelscope.cn — это не DashScope и не оплата):
+## `/videogif` — бесплатный GIF (Cloudflare)
 
-```env
-VIDEO_PROVIDER=modelscope
-MODELSCOPE_API_TOKEN=ms-...
-MAX_VIDEO_REQUESTS_PER_DAY=10
-```
+| Параметр | Значение |
+|----------|----------|
+| Команда | `/videogif описание` или фото + `/videogif …` |
+| Лимит | **10 GIF в день** |
+| Стоимость | Бесплатно (Cloudflare neurons) |
+| Результат | 2 кадра Flux → зацикленный GIF с crossfade |
 
-При ошибке ModelScope бот автоматически отправит GIF (fallback по умолчанию).
+Дополнительных ключей не нужно — достаточно `CLOUDFLARE_*`.
 
-## `/music` — Hugging Face MusicGen (рекомендуется)
+## `/music` — Hugging Face MusicGen
 
 | Параметр | Значение |
 |----------|----------|
 | Модель | `facebook/musicgen-small` |
-| Требования | `HUGGINGFACE_TOKEN` (бесплатно, без карты и Alibaba) |
+| Требования | `HUGGINGFACE_TOKEN` (бесплатно, без карты) |
 | Длина | ~10 сек WAV |
-
-1. [huggingface.co](https://huggingface.co) → Settings → **Access Tokens** → New (Read)
-2. Vercel:
 
 ```env
 HUGGINGFACE_TOKEN=hf_...
 MAX_MUSIC_REQUESTS_PER_DAY=5
 ```
 
-Первый запрос может занять 1–2 мин (холодный старт модели).
-
-ModelScope (`MODELSCOPE_API_TOKEN`) — опционально, но нужен **китайский** Aliyun, International не подходит.
-
 ## Команды
 
 | Команда | Описание |
 |---------|----------|
 | `/generate` | Картинка из текста |
-| `/video` | Клип из текста |
+| `/video` | MP4 из текста (fal.ai) |
+| `/videogif` | GIF-клип из текста (бесплатно) |
 | `/music` | Музыка из текста (~10 сек) |
-| Фото + `/video …` | Клип из фото |
+| Фото + `/video …` | MP4 из фото |
+| Фото + `/videogif …` | GIF из фото |
 | `/stats` | Лимиты |

@@ -3,14 +3,16 @@ import type { TranslationKey } from './en';
 export const ru: Record<TranslationKey, string> = {
   welcome: `👋 <b>Добро пожаловать в Imagnano!</b>
 
-Создаю картинки (Cloudflare Flux), короткие видео и музыку (ModelScope MusicGen).
+Создаю картинки (Cloudflare Flux), настоящее MP4-видео (fal.ai), бесплатные GIF-клипы и музыку (Hugging Face MusicGen).
 
 <b>Быстрый старт:</b>
 • Напишите текст — сгенерирую картинку
 • <code>/generate закат над Токио, киберпанк</code>
-• <code>/video кот идёт по снегу</code> — видео из текста
+• <code>/video кот идёт по снегу</code> — MP4 (fal.ai, 5/день)
+• <code>/videogif волны на пляже</code> — бесплатный GIF (10/день)
 • <code>/music спокойный lo-fi джаз с пианино</code> — музыка из текста
-• Фото + <code>/video плавное приближение камеры</code> — видео из фото
+• Фото + <code>/video плавное приближение камеры</code> — MP4 из фото
+• Фото + <code>/videogif лёгкий ветер в волосах</code> — GIF из фото
 • Фото + подпись — редактирование картинки
 • <code>/style</code> — выбор стиля
 
@@ -32,9 +34,15 @@ export const ru: Record<TranslationKey, string> = {
 <b>Стиль:</b>
 /style — пресет (аниме, фото, акварель…)
 
-<b>Видео (~1–5 мин):</b>
+<b>Видео MP4 (~1–10 мин, fal.ai):</b>
 /video &lt;описание&gt;
 Фото + подпись <code>/video …</code>
+Лимит: 5 в день
+
+<b>Видео GIF (бесплатно, Cloudflare):</b>
+/videogif &lt;описание&gt;
+Фото + подпись <code>/videogif …</code>
+Лимит: 10 в день
 
 <b>Музыка (~5–15 сек, MusicGen):</b>
 /music &lt;описание&gt;
@@ -108,7 +116,7 @@ export const ru: Record<TranslationKey, string> = {
   videoFromImageCaption: '🎬 <b>Из вашего фото:</b>',
   videoGifFromImageCaption: '🎞 <b>Клип из фото:</b>',
   videoPreviewFromImageCaption: '🖼 <b>Кино-кадр из фото (preview):</b>',
-  videoHowTo: `🎬 <b>Видео из текста</b>
+  videoHowTo: `🎬 <b>Настоящее MP4-видео (fal.ai)</b>
 
 <code>/video описание сцены</code>
 
@@ -118,9 +126,30 @@ export const ru: Record<TranslationKey, string> = {
 <b>Видео из фото:</b> отправьте фото с подписью:
 <code>/video медленный зум, листья на ветру</code>
 
-<i>По умолчанию бесплатно:</i> короткий GIF через Cloudflare (только ключи Cloudflare). mp4 через ModelScope — только с <code>VIDEO_PROVIDER=modelscope</code> и привязкой Alibaba Cloud.`,
+<i>Лимит:</i> 5 MP4 в день. Нужен <code>FAL_KEY</code> на сервере.
+
+<b>Бесплатная альтернатива:</b> <code>/videogif …</code> — зацикленный GIF через Cloudflare.`,
+  falVideoNotConfigured:
+    '🎬 <b>MP4-видео не настроено.</b>\n\nДобавьте <code>FAL_KEY</code> на fal.ai → Dashboard → API Keys.',
+  videoGifHowTo: `🎞 <b>Бесплатный GIF (Cloudflare)</b>
+
+<code>/videogif описание сцены</code>
+
+Пример:
+<code>/videogif кот на подоконнике, за окном дождь, уютно</code>
+
+<b>Из фото:</b> отправьте фото с подписью:
+<code>/videogif лёгкий ветер, волосы слегка двигаются</code>
+
+<i>Лимит:</i> 10 GIF в день. Дополнительных ключей кроме Cloudflare не нужно.`,
+  videoGifNotConfigured:
+    '🎞 GIF-видео отключено. Поставьте <code>VIDEO_GIF_ENABLED=true</code> (по умолчанию) и проверьте ключи Cloudflare.',
+  videoGifGenerating: '🎞 Генерирую GIF-клип…\n\nОбычно 30–90 секунд.',
+  videoGifFromImage: '🎞 Оживляю фото в GIF…\n\nОбычно 30–90 секунд.',
+  needVideoGifPrompt:
+    '🎞 Укажите описание после <code>/videogif</code>\n\nПример: <code>/videogif волны ночью на берегу</code>',
   videoNotConfigured:
-    '🎬 Видео отключено. Для бесплатного GIF достаточно ключей Cloudflare, или включите <code>VIDEO_ENABLED=true</code>.',
+    '🎬 Видео отключено. Добавьте <code>FAL_KEY</code> для MP4 или используйте <code>/videogif</code> для бесплатного GIF.',
   needVideoPrompt:
     '🎬 Укажите описание после <code>/video</code>\n\nПример: <code>/video волны ночью на берегу</code>',
 

@@ -39,10 +39,44 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
         : `⏰ <b>Daily video limit reached.</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.`;
     }
 
+    case 'video_gif_rate_limit': {
+      const hours = resetIn ? Math.ceil(resetIn / 3600) : 24;
+      return isRu
+        ? `⏰ <b>Дневной лимит GIF-видео исчерпан.</b>\n\nСброс через ~${hours} ч.\n\nДля MP4 используйте <code>/video</code> (отдельный лимит).`
+        : `⏰ <b>Daily GIF video limit reached.</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.\n\nFor MP4 try <code>/video</code> (separate limit).`;
+    }
+
+    case 'fal_video_rate_limit': {
+      const hours = resetIn ? Math.ceil(resetIn / 3600) : 24;
+      return isRu
+        ? `⏰ <b>Дневной лимит MP4-видео исчерпан (5/день).</b>\n\nСброс через ~${hours} ч.\n\nБесплатный GIF: <code>/videogif</code>.`
+        : `⏰ <b>Daily MP4 video limit reached (5/day).</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.\n\nFree GIF: <code>/videogif</code>.`;
+    }
+
     case 'video_not_configured':
       return isRu
-        ? '🎬 <b>Видео не настроено.</b>\n\nДобавьте <code>MODELSCOPE_API_TOKEN</code> (бесплатная квота) или включите <code>VIDEO_PROVIDER=cloudflare_preview</code>.'
-        : '🎬 <b>Video is not configured.</b>\n\nAdd <code>MODELSCOPE_API_TOKEN</code> (free tier) or set <code>VIDEO_PROVIDER=cloudflare_preview</code>.';
+        ? '🎬 <b>Видео не настроено.</b>\n\nДля MP4 добавьте <code>FAL_KEY</code> (fal.ai). Для бесплатного GIF — <code>/videogif</code>.'
+        : '🎬 <b>Video is not configured.</b>\n\nAdd <code>FAL_KEY</code> (fal.ai) for MP4, or use <code>/videogif</code> for free GIF.';
+
+    case 'fal_auth_error':
+      return isRu
+        ? '🔑 <b>Неверный fal.ai API-ключ.</b>\n\nПроверьте <code>FAL_KEY</code> на fal.ai → Dashboard → API Keys.'
+        : '🔑 <b>Invalid fal.ai API key.</b>\n\nCheck <code>FAL_KEY</code> at fal.ai → Dashboard → API Keys.';
+
+    case 'fal_rate_limit':
+      return isRu
+        ? '⏳ <b>fal.ai временно перегружен.</b>\n\nПодождите немного и попробуйте снова.'
+        : '⏳ <b>fal.ai rate limit reached.</b>\n\nWait a moment and try again.';
+
+    case 'fal_generation_failed':
+      return isRu
+        ? '🚫 <b>fal.ai не смог сгенерировать видео.</b>\n\nПопробуйте другой промпт или проще сцену.'
+        : '🚫 <b>fal.ai could not generate the video.</b>\n\nTry a different or simpler prompt.';
+
+    case 'fal_no_video':
+      return isRu
+        ? '🎬 <b>fal.ai вернул пустой ответ.</b>\n\nПопробуйте ещё раз или смените модель в <code>FAL_T2V_MODEL</code>.'
+        : '🎬 <b>fal.ai returned no video.</b>\n\nTry again or change <code>FAL_T2V_MODEL</code>.';
 
     case 'modelscope_daily_limit':
       return isRu

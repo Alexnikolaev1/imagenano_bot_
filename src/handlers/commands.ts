@@ -1,6 +1,6 @@
 import { Bot } from 'grammy';
 import type { AppContext } from '../context';
-import { getRateLimitInfo, getVideoRateLimitInfo, getMusicRateLimitInfo } from '../utils/rateLimit';
+import { getRateLimitInfo, getVideoGifRateLimitInfo, getFalVideoRateLimitInfo, getMusicRateLimitInfo } from '../utils/rateLimit';
 import { buildStyleKeyboard, buildLangKeyboard } from '../utils/keyboards';
 import { getUserLang, getUserStyle } from '../storage/userPrefs';
 import { styleLabel } from '../i18n';
@@ -17,8 +17,10 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
     const lang = getUserLang(userId, ctx.from?.language_code);
     const max = ctx.config.maxRequestsPerDay;
     const info = getRateLimitInfo(userId, max);
-    const videoMax = ctx.config.maxVideoRequestsPerDay;
-    const videoInfo = getVideoRateLimitInfo(userId, videoMax);
+    const videoGifMax = ctx.config.maxVideoGifRequestsPerDay;
+    const videoGifInfo = getVideoGifRateLimitInfo(userId, videoGifMax);
+    const falVideoMax = ctx.config.maxFalVideoRequestsPerDay;
+    const falVideoInfo = getFalVideoRateLimitInfo(userId, falVideoMax);
     const musicMax = ctx.config.maxMusicRequestsPerDay;
     const musicInfo = getMusicRateLimitInfo(userId, musicMax);
 
@@ -27,10 +29,16 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
       `🎨 ${ctx.t('statsUsed')}: <b>${info.used}</b> / ${max}\n` +
       `🎨 ${ctx.t('statsRemaining')}: <b>${info.remaining}</b>\n`;
 
-    if (ctx.videoService) {
+    if (ctx.videoGifService) {
       text +=
-        `\n🎬 ${ctx.t('statsUsed')}: <b>${videoInfo.used}</b> / ${videoMax}\n` +
-        `🎬 ${ctx.t('statsRemaining')}: <b>${videoInfo.remaining}</b>\n`;
+        `\n🎞 ${ctx.t('statsUsed')}: <b>${videoGifInfo.used}</b> / ${videoGifMax} (GIF)\n` +
+        `🎞 ${ctx.t('statsRemaining')}: <b>${videoGifInfo.remaining}</b>\n`;
+    }
+
+    if (ctx.falVideoService) {
+      text +=
+        `\n🎬 ${ctx.t('statsUsed')}: <b>${falVideoInfo.used}</b> / ${falVideoMax} (MP4)\n` +
+        `🎬 ${ctx.t('statsRemaining')}: <b>${falVideoInfo.remaining}</b>\n`;
     }
 
     if (ctx.musicService) {
@@ -76,6 +84,10 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
   // Menu button aliases (reply keyboard)
   bot.hears(['🎬 Видео', '🎬 Video'], async (ctx) => {
     await ctx.reply(ctx.t('videoHowTo'), { parse_mode: 'HTML' });
+  });
+
+  bot.hears(['🎞 GIF', '🎞 GIF video'], async (ctx) => {
+    await ctx.reply(ctx.t('videoGifHowTo'), { parse_mode: 'HTML' });
   });
 
   bot.hears(['🎵 Музыка', '🎵 Music'], async (ctx) => {
