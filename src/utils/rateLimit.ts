@@ -149,24 +149,24 @@ export function getVideoGifRateLimitInfo(userId: number, maxPerDay: number): {
   return getRateLimitInfoKeyed(`videogif:${userId}`, maxPerDay);
 }
 
-export function peekFalVideoRateLimit(userId: number, maxPerDay: number): {
+export function peekColabVideoRateLimit(userId: number, maxPerDay: number): {
   allowed: boolean;
   remaining: number;
   resetIn: number;
 } {
-  return checkRateLimitKeyed(`fal_video:${userId}`, maxPerDay, false);
+  return checkRateLimitKeyed(`colab_video:${userId}`, maxPerDay, false);
 }
 
-export function consumeFalVideoRateLimit(userId: number, maxPerDay: number): void {
-  checkRateLimitKeyed(`fal_video:${userId}`, maxPerDay, true);
+export function consumeColabVideoRateLimit(userId: number, maxPerDay: number): void {
+  checkRateLimitKeyed(`colab_video:${userId}`, maxPerDay, true);
 }
 
-export function getFalVideoRateLimitInfo(userId: number, maxPerDay: number): {
+export function getColabVideoRateLimitInfo(userId: number, maxPerDay: number): {
   used: number;
   remaining: number;
   resetIn: number;
 } {
-  return getRateLimitInfoKeyed(`fal_video:${userId}`, maxPerDay);
+  return getRateLimitInfoKeyed(`colab_video:${userId}`, maxPerDay);
 }
 
 export function checkMusicRateLimit(userId: number, maxPerDay: number): {

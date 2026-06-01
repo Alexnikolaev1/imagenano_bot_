@@ -3,16 +3,14 @@ import type { TranslationKey } from './en';
 export const ru: Record<TranslationKey, string> = {
   welcome: `👋 <b>Добро пожаловать в Imagnano!</b>
 
-Создаю картинки (Cloudflare Flux), настоящее MP4-видео (fal.ai), бесплатные GIF-клипы и музыку (Hugging Face MusicGen).
+Создаю картинки (Cloudflare Flux), видео через ваш Colab (пока включён ПК), бесплатные GIF и музыку (Hugging Face).
 
 <b>Быстрый старт:</b>
 • Напишите текст — сгенерирую картинку
 • <code>/generate закат над Токио, киберпанк</code>
-• <code>/video кот идёт по снегу</code> — MP4 (fal.ai, 5/день)
+• <code>/video кот идёт по снегу</code> — MP4 через Colab (5/день, ПК должен быть включён)
 • <code>/videogif волны на пляже</code> — бесплатный GIF (10/день)
-• <code>/music спокойный lo-fi джаз с пианино</code> — музыка из текста
-• Фото + <code>/video плавное приближение камеры</code> — MP4 из фото
-• Фото + <code>/videogif лёгкий ветер в волосах</code> — GIF из фото
+• Фото + <code>/video плавный зум</code> — оживить фото (Colab)
 • Фото + подпись — редактирование картинки
 • <code>/style</code> — выбор стиля
 
@@ -34,15 +32,14 @@ export const ru: Record<TranslationKey, string> = {
 <b>Стиль:</b>
 /style — пресет (аниме, фото, акварель…)
 
-<b>Видео MP4 (~1–10 мин, fal.ai):</b>
+<b>Видео MP4 (Colab на вашем ПК):</b>
 /video &lt;описание&gt;
 Фото + подпись <code>/video …</code>
-Лимит: 5 в день
+Нужен <code>VIDEO_API</code> (ngrok). Лимит: 5/день
 
 <b>Видео GIF (бесплатно, Cloudflare):</b>
 /videogif &lt;описание&gt;
-Фото + подпись <code>/videogif …</code>
-Лимит: 10 в день
+Лимит: 10/день
 
 <b>Музыка (~5–15 сек, MusicGen):</b>
 /music &lt;описание&gt;
@@ -116,24 +113,27 @@ export const ru: Record<TranslationKey, string> = {
   videoFromImageCaption: '🎬 <b>Из вашего фото:</b>',
   videoGifFromImageCaption: '🎞 <b>Клип из фото:</b>',
   videoPreviewFromImageCaption: '🖼 <b>Кино-кадр из фото (preview):</b>',
-  videoHowTo: `🎬 <b>Настоящее MP4-видео (fal.ai)</b>
+  videoHowTo: `🎬 <b>MP4-видео (ваш Colab + ngrok)</b>
 
 <code>/video описание сцены</code>
 
 Пример:
-<code>/video золотистый ретривер бежит по пляжу на закате, кинематографично</code>
+<code>/video золотистый ретривер бежит по пляжу на закате</code>
 
-<b>Видео из фото:</b> отправьте фото с подписью:
+<b>Из фото:</b> отправьте фото с подписью:
 <code>/video медленный зум, листья на ветру</code>
 
-<i>Лимит:</i> 5 MP4 в день. Нужен <code>FAL_KEY</code> на сервере.
+Бот отправляет картинку в Colab. <b>Держите Colab запущенным</b> и обновляйте <code>VIDEO_API</code>, когда меняется URL ngrok.
 
-<b>Бесплатная альтернатива:</b> <code>/videogif …</code> — зацикленный GIF через Cloudflare.`,
-  falVideoNotConfigured:
-    '🎬 <b>MP4-видео не настроено.</b>\n\nДобавьте <code>FAL_KEY</code> на fal.ai → Dashboard → API Keys.',
+<i>Из текста:</i> сначала кадр через Cloudflare, затем анимация в Colab.
+
+Лимит: 5 MP4 в день. Бесплатный GIF: <code>/videogif</code>.`,
+  colabNotConfigured:
+    '🎬 <b>Colab-видео не настроено.</b>\n\nДобавьте на сервер <code>VIDEO_API=https://….ngrok-free.app/generate_video/</code> (из запущенного ноутбука Colab).\n\nБесплатно: <code>/videogif</code>',
   videoGifHowTo: `🎞 <b>Бесплатный GIF (Cloudflare)</b>
 
 <code>/videogif описание сцены</code>
+(то же, что <code>/video</code>)
 
 Пример:
 <code>/videogif кот на подоконнике, за окном дождь, уютно</code>
@@ -142,16 +142,14 @@ export const ru: Record<TranslationKey, string> = {
 <code>/videogif лёгкий ветер, волосы слегка двигаются</code>
 
 <i>Лимит:</i> 10 GIF в день. Дополнительных ключей кроме Cloudflare не нужно.`,
-  videoGifNotConfigured:
-    '🎞 GIF-видео отключено. Поставьте <code>VIDEO_GIF_ENABLED=true</code> (по умолчанию) и проверьте ключи Cloudflare.',
-  videoGifGenerating: '🎞 Генерирую GIF-клип…\n\nОбычно 30–90 секунд.',
-  videoGifFromImage: '🎞 Оживляю фото в GIF…\n\nОбычно 30–90 секунд.',
+  videoGifGenerating: '🎞 Генерирую видео-клип…\n\nОбычно 30–90 секунд.',
+  videoGifFromImage: '🎞 Оживляю фото…\n\nОбычно 30–90 секунд.',
   needVideoGifPrompt:
-    '🎞 Укажите описание после <code>/videogif</code>\n\nПример: <code>/videogif волны ночью на берегу</code>',
+    '🎞 Укажите описание после команды\n\nПример: <code>/video волны ночью на берегу</code>',
   videoNotConfigured:
-    '🎬 Видео отключено. Добавьте <code>FAL_KEY</code> для MP4 или используйте <code>/videogif</code> для бесплатного GIF.',
+    '🎞 <b>Видео отключено.</b>\n\nУкажите <code>VIDEO_API</code> для Colab MP4 или проверьте ключи Cloudflare для <code>/videogif</code>.',
   needVideoPrompt:
-    '🎬 Укажите описание после <code>/video</code>\n\nПример: <code>/video волны ночью на берегу</code>',
+    '🎞 Укажите описание после <code>/video</code>\n\nПример: <code>/video волны ночью на берегу</code>',
 
   musicGenerating: '🎵 Генерирую музыку…\n\nОбычно 15–60 секунд (первый раз до 2 мин). Подождите, пожалуйста.',
   musicDoneSending: '✅ Трек готов ({seconds} с). Отправляю…',

@@ -274,6 +274,98 @@ export async function sendVideo(
   }
 }
 
+export async function sendVideoBase64(
+  chatId: number | string,
+  videoBase64: string,
+  mimeType: string,
+  caption?: string
+): Promise<{ message_id: number }> {
+  const ext = mimeType.includes('webm') ? 'webm' : 'mp4';
+  const filename = `video_${Date.now()}.${ext}`;
+  const tmpPath = dataFile(filename);
+
+  try {
+    const normalized = normalizeBase64(videoBase64);
+    const buffer = Buffer.from(normalized, 'base64');
+    if (buffer.length === 0) throw new Error('Decoded video buffer is empty');
+    fs.writeFileSync(tmpPath, buffer);
+
+    return await sendVideoFile(chatId, tmpPath, filename, mimeType, caption);
+  } finally {
+    try {
+      if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    } catch {
+      // non-critical cleanup
+    }
+  }
+}
+
+function sendVideoFile(
+  chatId: number | string,
+  filePath: string,
+  filename: string,
+  mimeType: string,
+  caption?: string
+): Promise<{ message_id: number }> {
+  return new Promise((resolve, reject) => {
+    const boundary = `----FormBoundary${Date.now()}`;
+    const fileData = fs.readFileSync(filePath);
+    const parts: Buffer[] = [];
+
+    parts.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n${chatId}\r\n`
+    ));
+    parts.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="video"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`
+    ));
+    parts.push(fileData);
+    parts.push(Buffer.from('\r\n'));
+    parts.push(Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="supports_streaming"\r\n\r\ntrue\r\n`
+    ));
+
+    if (caption) {
+      parts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="caption"\r\n\r\n${caption}\r\n`
+      ));
+      parts.push(Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="parse_mode"\r\n\r\nHTML\r\n`
+      ));
+    }
+
+    parts.push(Buffer.from(`--${boundary}--\r\n`));
+    const body = Buffer.concat(parts);
+
+    const options = {
+      hostname: 'api.telegram.org',
+      path: `/bot${getToken()}/sendVideo`,
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': body.length,
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.ok) resolve(parsed.result);
+          else reject(new Error(`Telegram sendVideo error: ${parsed.description}`));
+        } catch {
+          reject(new Error('Failed to parse sendVideo response'));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
 export async function sendAudio(
   chatId: number | string,
   audioBase64: string,

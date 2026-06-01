@@ -16,6 +16,8 @@ export interface VideoResult {
   success: boolean;
   /** Real MP4 URL from a video API */
   videoUrl?: string;
+  /** MP4 bytes as base64 (Colab direct response) */
+  videoBase64?: string;
   /** Cloudflare preview mode — cinematic still instead of motion video */
   mode?: 'video' | 'preview' | 'gif';
   imageBase64?: string;

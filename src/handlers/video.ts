@@ -1,12 +1,12 @@
 import { Bot } from 'grammy';
 import type { AppContext } from '../context';
-import { assertFalVideoRateLimit } from '../services/rateLimitGuard';
+import { assertColabVideoRateLimit, assertVideoGifRateLimit } from '../services/rateLimitGuard';
 import { runVideoJob } from '../services/videoPipeline';
-import { consumeFalVideoRateLimit } from '../utils/rateLimit';
+import { consumeColabVideoRateLimit, consumeVideoGifRateLimit } from '../utils/rateLimit';
 import { getUserLang } from '../storage/userPrefs';
 import { logError, logInfo } from '../utils/logger';
 
-/** Real MP4 video via fal.ai */
+/** /video — Colab/ngrok MP4 when VIDEO_API is set; /videogif — free Cloudflare GIF */
 export function registerVideoHandlers(bot: Bot<AppContext>): void {
   bot.command('video', async (ctx) => {
     const userId = ctx.from?.id;
@@ -14,26 +14,77 @@ export function registerVideoHandlers(bot: Bot<AppContext>): void {
     if (!userId || !chatId) return;
 
     const lang = getUserLang(userId, ctx.from?.language_code);
+    const rawPrompt = typeof ctx.match === 'string' ? ctx.match.trim() : '';
 
-    if (!ctx.falVideoService) {
-      await ctx.reply(ctx.t('falVideoNotConfigured'), { parse_mode: 'HTML' });
-      return;
-    }
-
-    const rawPrompt = ctx.match?.trim();
     if (!rawPrompt) {
       await ctx.reply(ctx.t('videoHowTo'), { parse_mode: 'HTML' });
       return;
     }
 
-    const guard = assertFalVideoRateLimit(userId, ctx.config.maxFalVideoRequestsPerDay, lang);
+    if (ctx.colabVideoService) {
+      const guard = assertColabVideoRateLimit(userId, ctx.config.maxColabVideoRequestsPerDay, lang);
+      if (!guard.ok) {
+        await ctx.reply(guard.message, { parse_mode: 'HTML' });
+        return;
+      }
+
+      const statusMsg = await ctx.reply(ctx.t('videoGenerating'), { parse_mode: 'HTML' });
+      logInfo('Video command (Colab)', { userId, prompt: rawPrompt.slice(0, 80) });
+
+      try {
+        await runVideoJob({
+          chatId,
+          statusMessageId: statusMsg.message_id,
+          userId,
+          type: 'text',
+          kind: 'mp4',
+          prompt: rawPrompt,
+          lang,
+          maxPerDay: ctx.config.maxColabVideoRequestsPerDay,
+          videoService: ctx.colabVideoService,
+          consumeRateLimit: consumeColabVideoRateLimit,
+          t: ctx.t,
+        });
+      } catch (err) {
+        logError('Video command (Colab) failed', err);
+      }
+      return;
+    }
+
+    if (!ctx.videoGifService) {
+      await ctx.reply(ctx.t('videoNotConfigured'), { parse_mode: 'HTML' });
+      return;
+    }
+
+    await ctx.reply(ctx.t('colabNotConfigured'), { parse_mode: 'HTML' });
+  });
+
+  bot.command('videogif', async (ctx) => {
+    const userId = ctx.from?.id;
+    const chatId = ctx.chat?.id;
+    if (!userId || !chatId) return;
+
+    const lang = getUserLang(userId, ctx.from?.language_code);
+
+    if (!ctx.videoGifService) {
+      await ctx.reply(ctx.t('videoNotConfigured'), { parse_mode: 'HTML' });
+      return;
+    }
+
+    const rawPrompt = typeof ctx.match === 'string' ? ctx.match.trim() : '';
+    if (!rawPrompt) {
+      await ctx.reply(ctx.t('videoGifHowTo'), { parse_mode: 'HTML' });
+      return;
+    }
+
+    const guard = assertVideoGifRateLimit(userId, ctx.config.maxVideoGifRequestsPerDay, lang);
     if (!guard.ok) {
       await ctx.reply(guard.message, { parse_mode: 'HTML' });
       return;
     }
 
-    const statusMsg = await ctx.reply(ctx.t('videoGenerating'), { parse_mode: 'HTML' });
-    logInfo('Video command (fal)', { userId, prompt: rawPrompt.slice(0, 80) });
+    const statusMsg = await ctx.reply(ctx.t('videoGifGenerating'), { parse_mode: 'HTML' });
+    logInfo('VideoGif command', { userId, prompt: rawPrompt.slice(0, 80) });
 
     try {
       await runVideoJob({
@@ -41,16 +92,16 @@ export function registerVideoHandlers(bot: Bot<AppContext>): void {
         statusMessageId: statusMsg.message_id,
         userId,
         type: 'text',
-        kind: 'mp4',
+        kind: 'gif',
         prompt: rawPrompt,
         lang,
-        maxPerDay: ctx.config.maxFalVideoRequestsPerDay,
-        videoService: ctx.falVideoService,
-        consumeRateLimit: consumeFalVideoRateLimit,
+        maxPerDay: ctx.config.maxVideoGifRequestsPerDay,
+        videoService: ctx.videoGifService,
+        consumeRateLimit: consumeVideoGifRateLimit,
         t: ctx.t,
       });
     } catch (err) {
-      logError('Video command job failed', err);
+      logError('VideoGif command failed', err);
     }
   });
 }

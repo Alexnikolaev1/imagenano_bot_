@@ -1,7 +1,7 @@
 // src/services/videoPipeline.ts — text/image-to-video (mp4, GIF, or preview still)
 
 import type { VideoGenerator } from './videoGenerator';
-import { sendAnimation, sendPhoto, sendVideo, editMessage } from './telegramSender';
+import { sendAnimation, sendPhoto, sendVideo, sendVideoBase64, editMessage } from './telegramSender';
 import { downloadTelegramFile, bufferToBase64 } from '../utils/fileUtils';
 import { errorMessage, escapeHtml } from '../utils/messages';
 import { logError, logInfo } from '../utils/logger';
@@ -96,7 +96,7 @@ export async function runVideoJob(params: VideoJobParams): Promise<void> {
       return;
     }
 
-    if (!result.videoUrl) {
+    if (!result.videoUrl && !result.videoBase64) {
       await editMessage(chatId, statusMessageId, errorMessage('unknown', undefined, lang), {
         parse_mode: 'HTML',
       });
@@ -105,7 +105,16 @@ export async function runVideoJob(params: VideoJobParams): Promise<void> {
 
     await editMessage(chatId, statusMessageId, t('videoDoneSending', { seconds: String(elapsed) }));
     logInfo('Sending mp4 video to Telegram', { userId, provider: videoService.provider });
-    await sendVideo(chatId, result.videoUrl, caption);
+    if (result.videoBase64) {
+      await sendVideoBase64(
+        chatId,
+        result.videoBase64,
+        result.mimeType || 'video/mp4',
+        caption
+      );
+    } else {
+      await sendVideo(chatId, result.videoUrl!, caption);
+    }
     await editMessage(chatId, statusMessageId, t('videoSent'));
   } catch (err) {
     logError('runVideoJob failed', err);

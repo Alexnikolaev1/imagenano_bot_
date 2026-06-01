@@ -25,9 +25,10 @@ export interface AppConfig {
   /** Free Cloudflare GIF clips (/videogif) */
   maxVideoGifRequestsPerDay: number;
   videoGifEnabled: boolean;
-  /** Real MP4 via fal.ai (/video) */
-  maxFalVideoRequestsPerDay: number;
-  falVideoEnabled: boolean;
+  /** Colab/ngrok MP4 (/video) */
+  videoApiUrl?: string;
+  maxColabVideoRequestsPerDay: number;
+  colabVideoEnabled: boolean;
   /** MusicGen via ModelScope — separate daily limit */
   maxMusicRequestsPerDay: number;
   musicEnabled: boolean;
@@ -78,8 +79,14 @@ export function loadConfig(): AppConfig {
       10
     ),
     videoGifEnabled: process.env.VIDEO_GIF_ENABLED !== 'false',
-    maxFalVideoRequestsPerDay: parseInt(process.env.MAX_FAL_VIDEO_REQUESTS_PER_DAY || '5', 10),
-    falVideoEnabled: process.env.FAL_VIDEO_ENABLED !== 'false',
+    videoApiUrl: process.env.VIDEO_API?.trim() || undefined,
+    maxColabVideoRequestsPerDay: parseInt(
+      process.env.MAX_COLAB_VIDEO_REQUESTS_PER_DAY ||
+        process.env.MAX_VIDEO_REQUESTS_PER_DAY ||
+        '5',
+      10
+    ),
+    colabVideoEnabled: process.env.COLAB_VIDEO_ENABLED !== 'false',
     maxMusicRequestsPerDay: parseInt(process.env.MAX_MUSIC_REQUESTS_PER_DAY || '5', 10),
     musicEnabled: process.env.MUSIC_ENABLED !== 'false',
   };

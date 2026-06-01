@@ -8,7 +8,7 @@ export function createDepsMiddleware(services: BotServices) {
     ctx.config = services.config;
     ctx.imageService = services.imageService;
     ctx.videoGifService = services.videoGifService;
-    ctx.falVideoService = services.falVideoService;
+    ctx.colabVideoService = services.colabVideoService;
     ctx.musicService = services.musicService;
 
     const userId = ctx.from?.id;

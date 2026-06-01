@@ -42,41 +42,53 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
     case 'video_gif_rate_limit': {
       const hours = resetIn ? Math.ceil(resetIn / 3600) : 24;
       return isRu
-        ? `⏰ <b>Дневной лимит GIF-видео исчерпан.</b>\n\nСброс через ~${hours} ч.\n\nДля MP4 используйте <code>/video</code> (отдельный лимит).`
-        : `⏰ <b>Daily GIF video limit reached.</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.\n\nFor MP4 try <code>/video</code> (separate limit).`;
+        ? `⏰ <b>Дневной лимит GIF-видео исчерпан.</b>\n\nСброс через ~${hours} ч.`
+        : `⏰ <b>Daily GIF video limit reached.</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.`;
     }
 
-    case 'fal_video_rate_limit': {
+    case 'colab_video_rate_limit': {
       const hours = resetIn ? Math.ceil(resetIn / 3600) : 24;
       return isRu
-        ? `⏰ <b>Дневной лимит MP4-видео исчерпан (5/день).</b>\n\nСброс через ~${hours} ч.\n\nБесплатный GIF: <code>/videogif</code>.`
-        : `⏰ <b>Daily MP4 video limit reached (5/day).</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.\n\nFree GIF: <code>/videogif</code>.`;
+        ? `⏰ <b>Дневной лимит MP4 (Colab) исчерпан.</b>\n\nСброс через ~${hours} ч.`
+        : `⏰ <b>Daily Colab MP4 limit reached.</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.`;
     }
+
+    case 'colab_offline':
+      return isRu
+        ? '💻 <b>Colab/ngrok недоступен.</b>\n\nВключите ноутбук в Colab, запустите ячейку с сервером и обновите <code>VIDEO_API</code> на Vercel, если сменился URL ngrok.'
+        : '💻 <b>Colab/ngrok is unreachable.</b>\n\nStart the Colab notebook, run the server cell, and update <code>VIDEO_API</code> on Vercel if the ngrok URL changed.';
+
+    case 'colab_timeout':
+      return isRu
+        ? '⏳ <b>Colab не успел сгенерировать видео.</b>\n\nПопробуйте проще сцену или увеличьте <code>VIDEO_API_TIMEOUT_MS</code>.'
+        : '⏳ <b>Colab video timed out.</b>\n\nTry a simpler scene or increase <code>VIDEO_API_TIMEOUT_MS</code>.';
+
+    case 'colab_server_error':
+      return isRu
+        ? '⚠️ <b>Ошибка на стороне Colab (500).</b>\n\nПроверьте вывод ячейки в ноутбуке — возможно, не хватает VRAM или модель упала.'
+        : '⚠️ <b>Colab server error (500).</b>\n\nCheck the notebook cell output — model may have crashed or run out of VRAM.';
+
+    case 'colab_bad_request':
+      return isRu
+        ? '🖼 <b>Colab не принял изображение.</b>\n\nОтправьте фото с подписью <code>/video …</code> или попробуйте другой промпт.'
+        : '🖼 <b>Colab rejected the image.</b>\n\nSend a photo with <code>/video …</code> caption or try another prompt.';
+
+    case 'colab_no_video':
+    case 'colab_empty_video':
+    case 'colab_bad_response':
+      return isRu
+        ? '🎬 <b>Colab вернул пустой ответ.</b>\n\nПроверьте, что endpoint <code>/generate_video/</code> отдаёт MP4.'
+        : '🎬 <b>Colab returned no video.</b>\n\nEnsure <code>/generate_video/</code> returns an MP4 file.';
+
+    case 'colab_image_failed':
+      return isRu
+        ? '🎨 <b>Не удалось создать кадр для видео (Cloudflare).</b>\n\nПопробуйте короче промпт.'
+        : '🎨 <b>Could not create keyframe for video (Cloudflare).</b>\n\nTry a shorter prompt.';
 
     case 'video_not_configured':
       return isRu
-        ? '🎬 <b>Видео не настроено.</b>\n\nДля MP4 добавьте <code>FAL_KEY</code> (fal.ai). Для бесплатного GIF — <code>/videogif</code>.'
-        : '🎬 <b>Video is not configured.</b>\n\nAdd <code>FAL_KEY</code> (fal.ai) for MP4, or use <code>/videogif</code> for free GIF.';
-
-    case 'fal_auth_error':
-      return isRu
-        ? '🔑 <b>Неверный fal.ai API-ключ.</b>\n\nПроверьте <code>FAL_KEY</code> на fal.ai → Dashboard → API Keys.'
-        : '🔑 <b>Invalid fal.ai API key.</b>\n\nCheck <code>FAL_KEY</code> at fal.ai → Dashboard → API Keys.';
-
-    case 'fal_rate_limit':
-      return isRu
-        ? '⏳ <b>fal.ai временно перегружен.</b>\n\nПодождите немного и попробуйте снова.'
-        : '⏳ <b>fal.ai rate limit reached.</b>\n\nWait a moment and try again.';
-
-    case 'fal_generation_failed':
-      return isRu
-        ? '🚫 <b>fal.ai не смог сгенерировать видео.</b>\n\nПопробуйте другой промпт или проще сцену.'
-        : '🚫 <b>fal.ai could not generate the video.</b>\n\nTry a different or simpler prompt.';
-
-    case 'fal_no_video':
-      return isRu
-        ? '🎬 <b>fal.ai вернул пустой ответ.</b>\n\nПопробуйте ещё раз или смените модель в <code>FAL_T2V_MODEL</code>.'
-        : '🎬 <b>fal.ai returned no video.</b>\n\nTry again or change <code>FAL_T2V_MODEL</code>.';
+        ? '🎞 <b>Видео не настроено.</b>\n\nПроверьте ключи Cloudflare на сервере (<code>CLOUDFLARE_ACCOUNT_ID</code>, <code>CLOUDFLARE_API_TOKEN</code>).'
+        : '🎞 <b>Video is not configured.</b>\n\nCheck Cloudflare keys on the server (<code>CLOUDFLARE_ACCOUNT_ID</code>, <code>CLOUDFLARE_API_TOKEN</code>).';
 
     case 'modelscope_daily_limit':
       return isRu

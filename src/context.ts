@@ -2,7 +2,7 @@ import { Context } from 'grammy';
 import type { AppConfig } from './config';
 import type { ImageService } from './services/imageService';
 import type { VideoGifService } from './services/videoGifService';
-import type { FalVideoService } from './services/providers/falVideo';
+import type { ColabVideoService } from './services/colabVideoService';
 import type { MusicService } from './services/musicService';
 import type { TranslationKey } from './i18n/en';
 
@@ -12,7 +12,7 @@ export interface BotServices {
   config: AppConfig;
   imageService: ImageService;
   videoGifService?: VideoGifService;
-  falVideoService?: FalVideoService;
+  colabVideoService?: ColabVideoService;
   musicService?: MusicService;
 }
 

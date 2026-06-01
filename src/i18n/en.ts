@@ -1,16 +1,14 @@
 export const en = {
   welcome: `👋 <b>Welcome to Imagnano!</b>
 
-I create images (Cloudflare Flux), real MP4 video (fal.ai), free GIF clips, and music (Hugging Face MusicGen).
+I create images (Cloudflare Flux), video via your Colab (when PC is on), free GIF clips, and music (Hugging Face).
 
 <b>Quick start:</b>
 • Send any text — I'll generate an image
 • <code>/generate sunset over Tokyo, cyberpunk</code>
-• <code>/video a cat walking in snow</code> — real MP4 (fal.ai, 5/day)
-• <code>/videogif waves on the beach</code> — free looping GIF (10/day)
-• <code>/music calm lo-fi jazz with piano</code> — text to music
-• Photo + <code>/video gentle camera zoom</code> — animate photo to MP4
-• Photo + <code>/videogif subtle wind in hair</code> — GIF from photo
+• <code>/video a cat walking in snow</code> — MP4 via Colab (5/day, PC must be on)
+• <code>/videogif waves on the beach</code> — free GIF (10/day)
+• Photo + <code>/video gentle zoom</code> — animate photo (Colab)
 • Send a photo with a caption to edit it
 • <code>/style</code> — pick an art style
 
@@ -32,14 +30,13 @@ Photo + caption: <code>/variation</code>
 <b>Style:</b>
 /style — choose preset (anime, photo, watercolor…)
 
-<b>Video MP4 (~1–10 min, fal.ai):</b>
+<b>Video MP4 (Colab on your PC):</b>
 /video &lt;prompt&gt;
 Photo + caption <code>/video …</code>
-Limit: 5 per day
+Needs <code>VIDEO_API</code> (ngrok). Limit: 5/day
 
 <b>Video GIF (free, Cloudflare):</b>
 /videogif &lt;prompt&gt;
-Photo + caption <code>/videogif …</code>
 Limit: 10 per day
 
 <b>Music (~5–15 sec, MusicGen):</b>
@@ -114,24 +111,27 @@ Send a photo with caption <code>/variation</code>`,
   videoFromImageCaption: '🎬 <b>From your photo:</b>',
   videoGifFromImageCaption: '🎞 <b>Looping clip from photo:</b>',
   videoPreviewFromImageCaption: '🖼 <b>Cinematic still from photo (preview):</b>',
-  videoHowTo: `🎬 <b>Real MP4 video (fal.ai)</b>
+  videoHowTo: `🎬 <b>MP4 video (your Colab + ngrok)</b>
 
-<code>/video your scene description</code>
+<code>/video description of the scene</code>
 
 Example:
-<code>/video a golden retriever running on a beach at sunset, cinematic</code>
+<code>/video a golden retriever running on a beach at sunset</code>
 
-<b>Image-to-video:</b> send a photo with caption:
-<code>/video slow zoom in, leaves moving in the wind</code>
+<b>From photo:</b> send a photo with caption:
+<code>/video slow zoom, wind in the leaves</code>
 
-<i>Limit:</i> 5 MP4 videos per day. Requires <code>FAL_KEY</code> on the server.
+The bot sends your image to Colab. <b>Keep Colab running</b> and update <code>VIDEO_API</code> when ngrok URL changes.
 
-<b>Free GIF alternative:</b> <code>/videogif …</code> — looping clip via Cloudflare.`,
-  falVideoNotConfigured:
-    '🎬 <b>MP4 video is not configured.</b>\n\nAdd <code>FAL_KEY</code> from fal.ai → Dashboard → API Keys.',
+<i>Text prompts:</i> a keyframe is generated via Cloudflare first, then animated in Colab.
+
+Limit: 5 MP4 per day. Free GIF: <code>/videogif</code>.`,
+  colabNotConfigured:
+    '🎬 <b>Colab video is off.</b>\n\nAdd <code>VIDEO_API=https://….ngrok-free.app/generate_video/</code> on the server (from your running Colab notebook).\n\nFree alternative: <code>/videogif</code>',
   videoGifHowTo: `🎞 <b>Free looping GIF (Cloudflare)</b>
 
 <code>/videogif your scene description</code>
+(same as <code>/video</code>)
 
 Example:
 <code>/videogif a cat on a windowsill, rain outside, cozy mood</code>
@@ -140,16 +140,14 @@ Example:
 <code>/videogif gentle breeze, hair moving slightly</code>
 
 <i>Limit:</i> 10 GIF clips per day. No extra API keys beyond Cloudflare.`,
-  videoGifNotConfigured:
-    '🎞 GIF video is disabled. Set <code>VIDEO_GIF_ENABLED=true</code> (default) and ensure Cloudflare keys are set.',
-  videoGifGenerating: '🎞 Generating GIF clip…\n\nUsually 30–90 seconds.',
-  videoGifFromImage: '🎞 Animating your photo into a GIF…\n\nUsually 30–90 seconds.',
+  videoGifGenerating: '🎞 Generating video clip…\n\nUsually 30–90 seconds.',
+  videoGifFromImage: '🎞 Animating your photo…\n\nUsually 30–90 seconds.',
   needVideoGifPrompt:
-    '🎞 Add a description after <code>/videogif</code>\n\nExample: <code>/videogif waves on the shore at night</code>',
+    '🎞 Add a description after the command\n\nExample: <code>/video waves on the shore at night</code>',
   videoNotConfigured:
-    '🎬 Video is disabled. Add <code>FAL_KEY</code> for MP4 or use <code>/videogif</code> for free GIF.',
+    '🎞 <b>Video is disabled.</b>\n\nSet <code>VIDEO_API</code> for Colab MP4 or ensure Cloudflare keys work for <code>/videogif</code>.',
   needVideoPrompt:
-    '🎬 Add a description after <code>/video</code>\n\nExample: <code>/video waves on the shore at night</code>',
+    '🎞 Add a description after <code>/video</code>\n\nExample: <code>/video waves on the shore at night</code>',
 
   musicGenerating: '🎵 Generating music…\n\nUsually 15–60 seconds (first run may take up to 2 min). Please wait.',
   musicDoneSending: '✅ Track ready ({seconds}s). Sending…',

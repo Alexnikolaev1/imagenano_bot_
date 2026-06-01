@@ -1,6 +1,6 @@
 import { Bot } from 'grammy';
 import type { AppContext } from '../context';
-import { getRateLimitInfo, getVideoGifRateLimitInfo, getFalVideoRateLimitInfo, getMusicRateLimitInfo } from '../utils/rateLimit';
+import { getRateLimitInfo, getVideoGifRateLimitInfo, getColabVideoRateLimitInfo, getMusicRateLimitInfo } from '../utils/rateLimit';
 import { buildStyleKeyboard, buildLangKeyboard } from '../utils/keyboards';
 import { getUserLang, getUserStyle } from '../storage/userPrefs';
 import { styleLabel } from '../i18n';
@@ -19,8 +19,8 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
     const info = getRateLimitInfo(userId, max);
     const videoGifMax = ctx.config.maxVideoGifRequestsPerDay;
     const videoGifInfo = getVideoGifRateLimitInfo(userId, videoGifMax);
-    const falVideoMax = ctx.config.maxFalVideoRequestsPerDay;
-    const falVideoInfo = getFalVideoRateLimitInfo(userId, falVideoMax);
+    const colabMax = ctx.config.maxColabVideoRequestsPerDay;
+    const colabInfo = getColabVideoRateLimitInfo(userId, colabMax);
     const musicMax = ctx.config.maxMusicRequestsPerDay;
     const musicInfo = getMusicRateLimitInfo(userId, musicMax);
 
@@ -35,10 +35,10 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
         `🎞 ${ctx.t('statsRemaining')}: <b>${videoGifInfo.remaining}</b>\n`;
     }
 
-    if (ctx.falVideoService) {
+    if (ctx.colabVideoService) {
       text +=
-        `\n🎬 ${ctx.t('statsUsed')}: <b>${falVideoInfo.used}</b> / ${falVideoMax} (MP4)\n` +
-        `🎬 ${ctx.t('statsRemaining')}: <b>${falVideoInfo.remaining}</b>\n`;
+        `\n🎬 ${ctx.t('statsUsed')}: <b>${colabInfo.used}</b> / ${colabMax} (Colab MP4)\n` +
+        `🎬 ${ctx.t('statsRemaining')}: <b>${colabInfo.remaining}</b>\n`;
     }
 
     if (ctx.musicService) {
@@ -84,10 +84,6 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
   // Menu button aliases (reply keyboard)
   bot.hears(['🎬 Видео', '🎬 Video'], async (ctx) => {
     await ctx.reply(ctx.t('videoHowTo'), { parse_mode: 'HTML' });
-  });
-
-  bot.hears(['🎞 GIF', '🎞 GIF video'], async (ctx) => {
-    await ctx.reply(ctx.t('videoGifHowTo'), { parse_mode: 'HTML' });
   });
 
   bot.hears(['🎵 Музыка', '🎵 Music'], async (ctx) => {
