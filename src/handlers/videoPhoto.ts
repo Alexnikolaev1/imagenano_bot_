@@ -1,8 +1,9 @@
 import { Bot } from 'grammy';
 import type { AppContext } from '../context';
-import { assertColabVideoRateLimit, assertVideoGifRateLimit } from '../services/rateLimitGuard';
+import { resolveMp4Video } from '../services/mp4Video';
+import { assertVideoGifRateLimit } from '../services/rateLimitGuard';
 import { runVideoJob } from '../services/videoPipeline';
-import { consumeColabVideoRateLimit, consumeVideoGifRateLimit } from '../utils/rateLimit';
+import { consumeVideoGifRateLimit } from '../utils/rateLimit';
 import { getUserLang } from '../storage/userPrefs';
 import { logError, logInfo } from '../utils/logger';
 
@@ -67,19 +68,20 @@ export function registerVideoPhotoHandlers(bot: Bot<AppContext>): void {
       return;
     }
 
-    if (!ctx.colabVideoService) {
-      await ctx.reply(ctx.t('colabNotConfigured'), { parse_mode: 'HTML' });
+    const mp4 = resolveMp4Video(ctx);
+    if (!mp4) {
+      await ctx.reply(ctx.t('videoMp4NotConfigured'), { parse_mode: 'HTML' });
       return;
     }
 
-    const guard = assertColabVideoRateLimit(userId, ctx.config.maxColabVideoRequestsPerDay, lang);
+    const guard = mp4.assertRateLimit(userId, mp4.maxPerDay, lang);
     if (!guard.ok) {
       await ctx.reply(guard.message, { parse_mode: 'HTML' });
       return;
     }
 
     const statusMsg = await ctx.reply(ctx.t('videoFromImage'), { parse_mode: 'HTML' });
-    logInfo('Video from photo (Colab)', { userId, prompt: prompt.slice(0, 80) });
+    logInfo('Video from photo', { userId, provider: mp4.provider, prompt: prompt.slice(0, 80) });
 
     try {
       await runVideoJob({
@@ -91,13 +93,13 @@ export function registerVideoPhotoHandlers(bot: Bot<AppContext>): void {
         prompt,
         fileId,
         lang,
-        maxPerDay: ctx.config.maxColabVideoRequestsPerDay,
-        videoService: ctx.colabVideoService,
-        consumeRateLimit: consumeColabVideoRateLimit,
+        maxPerDay: mp4.maxPerDay,
+        videoService: mp4.service,
+        consumeRateLimit: mp4.consumeRateLimit,
         t: ctx.t,
       });
     } catch (err) {
-      logError('Video photo (Colab) failed', err);
+      logError('Video photo failed', err);
     }
   });
 }

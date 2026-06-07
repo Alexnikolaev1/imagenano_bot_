@@ -53,6 +53,16 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
         : `⏰ <b>Daily Colab MP4 limit reached.</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.`;
     }
 
+    case 'colab_not_found':
+      return isRu
+        ? '🔍 <b>Адрес Colab не найден (404).</b>\n\n1. Запустите Colab + ngrok на ПК\n2. Скопируйте <b>новый</b> URL из ngrok\n3. На Vercel: <code>VIDEO_API=https://….ngrok-free.app/generate_video/</code>\n4. Redeploy\n\nВ логах Vercel ищите строку <code>Colab video API endpoints</code> — там видно, куда бот стучится.'
+        : '🔍 <b>Colab endpoint not found (404).</b>\n\n1. Start Colab + ngrok on your PC\n2. Copy the <b>new</b> ngrok URL\n3. On Vercel: <code>VIDEO_API=https://….ngrok-free.app/generate_video/</code>\n4. Redeploy\n\nCheck Vercel logs for <code>Colab video API endpoints</code>.';
+
+    case 'colab_ngrok_page':
+      return isRu
+        ? '🌐 <b>ngrok вернул HTML вместо API (404).</b>\n\nТуннель, скорее всего, <b>устарел</b>. Перезапустите ngrok, обновите <code>VIDEO_API</code> на Vercel и сделайте Redeploy.'
+        : '🌐 <b>ngrok returned HTML instead of the API (404).</b>\n\nThe tunnel is probably <b>expired</b>. Restart ngrok, update <code>VIDEO_API</code> on Vercel, and redeploy.';
+
     case 'colab_offline':
       return isRu
         ? '💻 <b>Colab/ngrok недоступен.</b>\n\nВключите ноутбук в Colab, запустите ячейку с сервером и обновите <code>VIDEO_API</code> на Vercel, если сменился URL ngrok.'
@@ -84,6 +94,39 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
       return isRu
         ? '🎨 <b>Не удалось создать кадр для видео (Cloudflare).</b>\n\nПопробуйте короче промпт.'
         : '🎨 <b>Could not create keyframe for video (Cloudflare).</b>\n\nTry a shorter prompt.';
+
+    case 'hf_video_rate_limit': {
+      const hours = resetIn ? Math.ceil(resetIn / 3600) : 24;
+      return isRu
+        ? `⏰ <b>Дневной лимит MP4 (HF Space) исчерпан.</b>\n\nСброс через ~${hours} ч.`
+        : `⏰ <b>Daily HF Space MP4 limit reached.</b>\n\nResets in ~${hours} hour${hours !== 1 ? 's' : ''}.`;
+    }
+
+    case 'hf_space_sleeping':
+      return isRu
+        ? '⏳ <b>Space на Hugging Face ещё просыпается.</b>\n\nОткройте <a href="https://huggingface.co/spaces/alex555196/videobot">videobot</a> и дождитесь Running, затем повторите.\n\nZeroGPU может ставить в очередь 1–3 мин.'
+        : '⏳ <b>Hugging Face Space is still waking up.</b>\n\nOpen <a href="https://huggingface.co/spaces/alex555196/videobot">videobot</a> and wait until Running, then try again.\n\nZeroGPU may queue for 1–3 min.';
+
+    case 'hf_space_timeout':
+      return isRu
+        ? '⏳ <b>HF Space не успел сгенерировать видео.</b>\n\nПопробуйте проще сцену или увеличьте <code>HF_VIDEO_TIMEOUT_MS</code>.'
+        : '⏳ <b>HF Space video timed out.</b>\n\nTry a simpler scene or increase <code>HF_VIDEO_TIMEOUT_MS</code>.';
+
+    case 'hf_space_no_video':
+    case 'hf_space_bad_response':
+      return isRu
+        ? '🎬 <b>Space вернул пустой ответ.</b>\n\nПроверьте логи Space на Hugging Face — возможно, OOM или ошибка модели.'
+        : '🎬 <b>Space returned no video.</b>\n\nCheck Space logs on Hugging Face — model may have crashed or run out of VRAM.';
+
+    case 'hf_space_upload_failed':
+      return isRu
+        ? '🖼 <b>Не удалось загрузить фото в Space.</b>\n\nПопробуйте текстовый <code>/video …</code> или отправьте фото поменьше.'
+        : '🖼 <b>Could not upload photo to Space.</b>\n\nTry text <code>/video …</code> or send a smaller photo.';
+
+    case 'hf_space_error':
+      return isRu
+        ? '⚠️ <b>Ошибка HF Space.</b>\n\nПроверьте, что Space Running и <code>HF_VIDEO_SPACE</code> указан верно.'
+        : '⚠️ <b>HF Space error.</b>\n\nEnsure the Space is Running and <code>HF_VIDEO_SPACE</code> is correct.';
 
     case 'video_not_configured':
       return isRu

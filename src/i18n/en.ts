@@ -1,14 +1,14 @@
 export const en = {
   welcome: `👋 <b>Welcome to Imagnano!</b>
 
-I create images (Cloudflare Flux), video via your Colab (when PC is on), free GIF clips, and music (Hugging Face).
+I create images (Cloudflare Flux), MP4 video via Hugging Face Space (LTX-Video), free GIF clips, and music.
 
 <b>Quick start:</b>
 • Send any text — I'll generate an image
 • <code>/generate sunset over Tokyo, cyberpunk</code>
-• <code>/video a cat walking in snow</code> — MP4 via Colab (5/day, PC must be on)
+• <code>/video a cat walking in snow</code> — MP4 via HF Space (5/day)
 • <code>/videogif waves on the beach</code> — free GIF (10/day)
-• Photo + <code>/video gentle zoom</code> — animate photo (Colab)
+• Photo + <code>/video gentle zoom</code> — animate photo (LTX)
 • Send a photo with a caption to edit it
 • <code>/style</code> — pick an art style
 
@@ -30,10 +30,10 @@ Photo + caption: <code>/variation</code>
 <b>Style:</b>
 /style — choose preset (anime, photo, watercolor…)
 
-<b>Video MP4 (Colab on your PC):</b>
+<b>Video MP4 (Hugging Face Space, LTX-Video):</b>
 /video &lt;prompt&gt;
 Photo + caption <code>/video …</code>
-Needs <code>VIDEO_API</code> (ngrok). Limit: 5/day
+Needs <code>HF_VIDEO_SPACE</code> + <code>HUGGINGFACE_TOKEN</code>. Limit: 5/day
 
 <b>Video GIF (free, Cloudflare):</b>
 /videogif &lt;prompt&gt;
@@ -111,7 +111,7 @@ Send a photo with caption <code>/variation</code>`,
   videoFromImageCaption: '🎬 <b>From your photo:</b>',
   videoGifFromImageCaption: '🎞 <b>Looping clip from photo:</b>',
   videoPreviewFromImageCaption: '🖼 <b>Cinematic still from photo (preview):</b>',
-  videoHowTo: `🎬 <b>MP4 video (your Colab + ngrok)</b>
+  videoHowTo: `🎬 <b>MP4 video (Hugging Face Space, LTX-Video)</b>
 
 <code>/video description of the scene</code>
 
@@ -121,11 +121,13 @@ Example:
 <b>From photo:</b> send a photo with caption:
 <code>/video slow zoom, wind in the leaves</code>
 
-The bot sends your image to Colab. <b>Keep Colab running</b> and update <code>VIDEO_API</code> when ngrok URL changes.
+Keep the Space <b>Running</b> on Hugging Face. On the server:
+<code>HF_VIDEO_SPACE=alex555196/videobot</code>
+<code>HUGGINGFACE_TOKEN=hf_…</code>
 
-<i>Text prompts:</i> a keyframe is generated via Cloudflare first, then animated in Colab.
-
-Limit: 5 MP4 per day. Free GIF: <code>/videogif</code>.`,
+Usually 1–5 minutes (ZeroGPU). Limit: 5 MP4 per day. Free GIF: <code>/videogif</code>.`,
+  videoMp4NotConfigured:
+    '🎬 <b>MP4 video is off.</b>\n\nAdd <code>HF_VIDEO_SPACE=alex555196/videobot</code> and <code>HUGGINGFACE_TOKEN</code> on the server.\n\nOr Colab: <code>VIDEO_API=…</code>\n\nFree alternative: <code>/videogif</code>',
   colabNotConfigured:
     '🎬 <b>Colab video is off.</b>\n\nAdd <code>VIDEO_API=https://….ngrok-free.app/generate_video/</code> on the server (from your running Colab notebook).\n\nFree alternative: <code>/videogif</code>',
   videoGifHowTo: `🎞 <b>Free looping GIF (Cloudflare)</b>
@@ -145,7 +147,7 @@ Example:
   needVideoGifPrompt:
     '🎞 Add a description after the command\n\nExample: <code>/video waves on the shore at night</code>',
   videoNotConfigured:
-    '🎞 <b>Video is disabled.</b>\n\nSet <code>VIDEO_API</code> for Colab MP4 or ensure Cloudflare keys work for <code>/videogif</code>.',
+    '🎞 <b>Video is disabled.</b>\n\nSet <code>HF_VIDEO_SPACE</code> for MP4 or ensure Cloudflare keys work for <code>/videogif</code>.',
   needVideoPrompt:
     '🎞 Add a description after <code>/video</code>\n\nExample: <code>/video waves on the shore at night</code>',
 

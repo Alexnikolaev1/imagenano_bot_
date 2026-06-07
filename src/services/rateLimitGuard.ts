@@ -5,6 +5,7 @@ import {
   peekVideoRateLimit,
   peekVideoGifRateLimit,
   peekColabVideoRateLimit,
+  peekHfVideoRateLimit,
   peekMusicRateLimit,
 } from '../utils/rateLimit';
 import { errorMessage } from '../utils/messages';
@@ -65,6 +66,21 @@ export function assertColabVideoRateLimit(
     return {
       ok: false,
       message: errorMessage('colab_video_rate_limit', limit.resetIn, lang),
+    };
+  }
+  return { ok: true, remaining: limit.remaining };
+}
+
+export function assertHfVideoRateLimit(
+  userId: number,
+  maxPerDay: number,
+  lang: Lang
+): { ok: true; remaining: number } | { ok: false; message: string } {
+  const limit = peekHfVideoRateLimit(userId, maxPerDay);
+  if (!limit.allowed) {
+    return {
+      ok: false,
+      message: errorMessage('hf_video_rate_limit', limit.resetIn, lang),
     };
   }
   return { ok: true, remaining: limit.remaining };

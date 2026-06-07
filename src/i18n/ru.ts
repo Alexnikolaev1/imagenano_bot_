@@ -3,14 +3,14 @@ import type { TranslationKey } from './en';
 export const ru: Record<TranslationKey, string> = {
   welcome: `👋 <b>Добро пожаловать в Imagnano!</b>
 
-Создаю картинки (Cloudflare Flux), видео через ваш Colab (пока включён ПК), бесплатные GIF и музыку (Hugging Face).
+Создаю картинки (Cloudflare Flux), MP4-видео через Hugging Face Space (LTX-Video), бесплатные GIF и музыку.
 
 <b>Быстрый старт:</b>
 • Напишите текст — сгенерирую картинку
 • <code>/generate закат над Токио, киберпанк</code>
-• <code>/video кот идёт по снегу</code> — MP4 через Colab (5/день, ПК должен быть включён)
+• <code>/video кот идёт по снегу</code> — MP4 через HF Space (5/день)
 • <code>/videogif волны на пляже</code> — бесплатный GIF (10/день)
-• Фото + <code>/video плавный зум</code> — оживить фото (Colab)
+• Фото + <code>/video плавный зум</code> — оживить фото (LTX)
 • Фото + подпись — редактирование картинки
 • <code>/style</code> — выбор стиля
 
@@ -32,10 +32,10 @@ export const ru: Record<TranslationKey, string> = {
 <b>Стиль:</b>
 /style — пресет (аниме, фото, акварель…)
 
-<b>Видео MP4 (Colab на вашем ПК):</b>
+<b>Видео MP4 (Hugging Face Space, LTX-Video):</b>
 /video &lt;описание&gt;
 Фото + подпись <code>/video …</code>
-Нужен <code>VIDEO_API</code> (ngrok). Лимит: 5/день
+Нужны <code>HF_VIDEO_SPACE</code> + <code>HUGGINGFACE_TOKEN</code>. Лимит: 5/день
 
 <b>Видео GIF (бесплатно, Cloudflare):</b>
 /videogif &lt;описание&gt;
@@ -113,7 +113,7 @@ export const ru: Record<TranslationKey, string> = {
   videoFromImageCaption: '🎬 <b>Из вашего фото:</b>',
   videoGifFromImageCaption: '🎞 <b>Клип из фото:</b>',
   videoPreviewFromImageCaption: '🖼 <b>Кино-кадр из фото (preview):</b>',
-  videoHowTo: `🎬 <b>MP4-видео (ваш Colab + ngrok)</b>
+  videoHowTo: `🎬 <b>MP4-видео (Hugging Face Space, LTX-Video)</b>
 
 <code>/video описание сцены</code>
 
@@ -123,11 +123,13 @@ export const ru: Record<TranslationKey, string> = {
 <b>Из фото:</b> отправьте фото с подписью:
 <code>/video медленный зум, листья на ветру</code>
 
-Бот отправляет картинку в Colab. <b>Держите Colab запущенным</b> и обновляйте <code>VIDEO_API</code>, когда меняется URL ngrok.
+Space должен быть <b>Running</b> на Hugging Face. На сервере:
+<code>HF_VIDEO_SPACE=alex555196/videobot</code>
+<code>HUGGINGFACE_TOKEN=hf_…</code>
 
-<i>Из текста:</i> сначала кадр через Cloudflare, затем анимация в Colab.
-
-Лимит: 5 MP4 в день. Бесплатный GIF: <code>/videogif</code>.`,
+Обычно 1–5 минут (ZeroGPU). Лимит: 5 MP4 в день. Бесплатный GIF: <code>/videogif</code>.`,
+  videoMp4NotConfigured:
+    '🎬 <b>MP4-видео не настроено.</b>\n\nДобавьте <code>HF_VIDEO_SPACE=alex555196/videobot</code> и <code>HUGGINGFACE_TOKEN</code> на сервер.\n\nИли Colab: <code>VIDEO_API=…</code>\n\nБесплатно: <code>/videogif</code>',
   colabNotConfigured:
     '🎬 <b>Colab-видео не настроено.</b>\n\nДобавьте на сервер <code>VIDEO_API=https://….ngrok-free.app/generate_video/</code> (из запущенного ноутбука Colab).\n\nБесплатно: <code>/videogif</code>',
   videoGifHowTo: `🎞 <b>Бесплатный GIF (Cloudflare)</b>
@@ -147,7 +149,7 @@ export const ru: Record<TranslationKey, string> = {
   needVideoGifPrompt:
     '🎞 Укажите описание после команды\n\nПример: <code>/video волны ночью на берегу</code>',
   videoNotConfigured:
-    '🎞 <b>Видео отключено.</b>\n\nУкажите <code>VIDEO_API</code> для Colab MP4 или проверьте ключи Cloudflare для <code>/videogif</code>.',
+    '🎞 <b>Видео отключено.</b>\n\nУкажите <code>HF_VIDEO_SPACE</code> для MP4 или проверьте ключи Cloudflare для <code>/videogif</code>.',
   needVideoPrompt:
     '🎞 Укажите описание после <code>/video</code>\n\nПример: <code>/video волны ночью на берегу</code>',
 

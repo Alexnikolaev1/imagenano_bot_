@@ -1,6 +1,6 @@
 import { Bot } from 'grammy';
 import type { AppContext } from '../context';
-import { getRateLimitInfo, getVideoGifRateLimitInfo, getColabVideoRateLimitInfo, getMusicRateLimitInfo } from '../utils/rateLimit';
+import { getRateLimitInfo, getVideoGifRateLimitInfo, getColabVideoRateLimitInfo, getHfVideoRateLimitInfo, getMusicRateLimitInfo } from '../utils/rateLimit';
 import { buildStyleKeyboard, buildLangKeyboard } from '../utils/keyboards';
 import { getUserLang, getUserStyle } from '../storage/userPrefs';
 import { styleLabel } from '../i18n';
@@ -19,8 +19,6 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
     const info = getRateLimitInfo(userId, max);
     const videoGifMax = ctx.config.maxVideoGifRequestsPerDay;
     const videoGifInfo = getVideoGifRateLimitInfo(userId, videoGifMax);
-    const colabMax = ctx.config.maxColabVideoRequestsPerDay;
-    const colabInfo = getColabVideoRateLimitInfo(userId, colabMax);
     const musicMax = ctx.config.maxMusicRequestsPerDay;
     const musicInfo = getMusicRateLimitInfo(userId, musicMax);
 
@@ -35,7 +33,15 @@ export function registerCommandHandlers(bot: Bot<AppContext>): void {
         `🎞 ${ctx.t('statsRemaining')}: <b>${videoGifInfo.remaining}</b>\n`;
     }
 
-    if (ctx.colabVideoService) {
+    if (ctx.hfSpaceVideoService) {
+      const hfMax = ctx.config.maxHfVideoRequestsPerDay;
+      const hfInfo = getHfVideoRateLimitInfo(userId, hfMax);
+      text +=
+        `\n🎬 ${ctx.t('statsUsed')}: <b>${hfInfo.used}</b> / ${hfMax} (HF MP4)\n` +
+        `🎬 ${ctx.t('statsRemaining')}: <b>${hfInfo.remaining}</b>\n`;
+    } else if (ctx.colabVideoService) {
+      const colabMax = ctx.config.maxColabVideoRequestsPerDay;
+      const colabInfo = getColabVideoRateLimitInfo(userId, colabMax);
       text +=
         `\n🎬 ${ctx.t('statsUsed')}: <b>${colabInfo.used}</b> / ${colabMax} (Colab MP4)\n` +
         `🎬 ${ctx.t('statsRemaining')}: <b>${colabInfo.remaining}</b>\n`;

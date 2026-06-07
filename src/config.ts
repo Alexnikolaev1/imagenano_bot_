@@ -29,6 +29,10 @@ export interface AppConfig {
   videoApiUrl?: string;
   maxColabVideoRequestsPerDay: number;
   colabVideoEnabled: boolean;
+  /** HF Space LTX-Video MP4 (/video) — preferred over Colab */
+  hfVideoSpace?: string;
+  maxHfVideoRequestsPerDay: number;
+  hfVideoEnabled: boolean;
   /** MusicGen via ModelScope — separate daily limit */
   maxMusicRequestsPerDay: number;
   musicEnabled: boolean;
@@ -87,6 +91,17 @@ export function loadConfig(): AppConfig {
       10
     ),
     colabVideoEnabled: process.env.COLAB_VIDEO_ENABLED !== 'false',
+    hfVideoSpace:
+      process.env.HF_VIDEO_SPACE?.trim() ||
+      process.env.HF_VIDEO_SPACE_URL?.trim() ||
+      undefined,
+    maxHfVideoRequestsPerDay: parseInt(
+      process.env.MAX_HF_VIDEO_REQUESTS_PER_DAY ||
+        process.env.MAX_VIDEO_REQUESTS_PER_DAY ||
+        '5',
+      10
+    ),
+    hfVideoEnabled: process.env.HF_VIDEO_ENABLED !== 'false',
     maxMusicRequestsPerDay: parseInt(process.env.MAX_MUSIC_REQUESTS_PER_DAY || '5', 10),
     musicEnabled: process.env.MUSIC_ENABLED !== 'false',
   };

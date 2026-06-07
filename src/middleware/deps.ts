@@ -9,6 +9,7 @@ export function createDepsMiddleware(services: BotServices) {
     ctx.imageService = services.imageService;
     ctx.videoGifService = services.videoGifService;
     ctx.colabVideoService = services.colabVideoService;
+    ctx.hfSpaceVideoService = services.hfSpaceVideoService;
     ctx.musicService = services.musicService;
 
     const userId = ctx.from?.id;

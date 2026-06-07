@@ -169,6 +169,26 @@ export function getColabVideoRateLimitInfo(userId: number, maxPerDay: number): {
   return getRateLimitInfoKeyed(`colab_video:${userId}`, maxPerDay);
 }
 
+export function peekHfVideoRateLimit(userId: number, maxPerDay: number): {
+  allowed: boolean;
+  remaining: number;
+  resetIn: number;
+} {
+  return checkRateLimitKeyed(`hf_video:${userId}`, maxPerDay, false);
+}
+
+export function consumeHfVideoRateLimit(userId: number, maxPerDay: number): void {
+  checkRateLimitKeyed(`hf_video:${userId}`, maxPerDay, true);
+}
+
+export function getHfVideoRateLimitInfo(userId: number, maxPerDay: number): {
+  used: number;
+  remaining: number;
+  resetIn: number;
+} {
+  return getRateLimitInfoKeyed(`hf_video:${userId}`, maxPerDay);
+}
+
 export function checkMusicRateLimit(userId: number, maxPerDay: number): {
   allowed: boolean;
   remaining: number;

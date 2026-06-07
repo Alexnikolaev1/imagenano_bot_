@@ -1,12 +1,13 @@
 import { Bot } from 'grammy';
 import type { AppContext } from '../context';
-import { assertColabVideoRateLimit, assertVideoGifRateLimit } from '../services/rateLimitGuard';
+import { resolveMp4Video } from '../services/mp4Video';
+import { assertVideoGifRateLimit } from '../services/rateLimitGuard';
 import { runVideoJob } from '../services/videoPipeline';
-import { consumeColabVideoRateLimit, consumeVideoGifRateLimit } from '../utils/rateLimit';
+import { consumeVideoGifRateLimit } from '../utils/rateLimit';
 import { getUserLang } from '../storage/userPrefs';
 import { logError, logInfo } from '../utils/logger';
 
-/** /video — Colab/ngrok MP4 when VIDEO_API is set; /videogif — free Cloudflare GIF */
+/** /video — HF Space or Colab MP4; /videogif — free Cloudflare GIF */
 export function registerVideoHandlers(bot: Bot<AppContext>): void {
   bot.command('video', async (ctx) => {
     const userId = ctx.from?.id;
@@ -21,15 +22,16 @@ export function registerVideoHandlers(bot: Bot<AppContext>): void {
       return;
     }
 
-    if (ctx.colabVideoService) {
-      const guard = assertColabVideoRateLimit(userId, ctx.config.maxColabVideoRequestsPerDay, lang);
+    const mp4 = resolveMp4Video(ctx);
+    if (mp4) {
+      const guard = mp4.assertRateLimit(userId, mp4.maxPerDay, lang);
       if (!guard.ok) {
         await ctx.reply(guard.message, { parse_mode: 'HTML' });
         return;
       }
 
       const statusMsg = await ctx.reply(ctx.t('videoGenerating'), { parse_mode: 'HTML' });
-      logInfo('Video command (Colab)', { userId, prompt: rawPrompt.slice(0, 80) });
+      logInfo('Video command', { userId, provider: mp4.provider, prompt: rawPrompt.slice(0, 80) });
 
       try {
         await runVideoJob({
@@ -40,13 +42,13 @@ export function registerVideoHandlers(bot: Bot<AppContext>): void {
           kind: 'mp4',
           prompt: rawPrompt,
           lang,
-          maxPerDay: ctx.config.maxColabVideoRequestsPerDay,
-          videoService: ctx.colabVideoService,
-          consumeRateLimit: consumeColabVideoRateLimit,
+          maxPerDay: mp4.maxPerDay,
+          videoService: mp4.service,
+          consumeRateLimit: mp4.consumeRateLimit,
           t: ctx.t,
         });
       } catch (err) {
-        logError('Video command (Colab) failed', err);
+        logError('Video command failed', err);
       }
       return;
     }
@@ -56,7 +58,7 @@ export function registerVideoHandlers(bot: Bot<AppContext>): void {
       return;
     }
 
-    await ctx.reply(ctx.t('colabNotConfigured'), { parse_mode: 'HTML' });
+    await ctx.reply(ctx.t('videoMp4NotConfigured'), { parse_mode: 'HTML' });
   });
 
   bot.command('videogif', async (ctx) => {

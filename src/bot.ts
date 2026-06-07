@@ -6,6 +6,7 @@ import { ImageService } from './services/imageService';
 import { PromptEnhancer } from './services/promptEnhancer';
 import { createVideoGifServiceFromEnv } from './services/videoGifService';
 import { createColabVideoServiceFromEnv } from './services/colabVideoService';
+import { createHfSpaceVideoServiceFromEnv } from './services/hfSpaceVideoService';
 import { createMusicServiceFromEnv } from './services/musicService';
 import { registerHandlers } from './handlers';
 import { logError } from './utils/logger';
@@ -34,13 +35,25 @@ export function createBot(): { bot: Bot<AppContext>; imageService: ImageService 
       ? createColabVideoServiceFromEnv(imageService) ?? undefined
       : undefined;
 
+  const hfSpaceVideoService =
+    config.hfVideoEnabled && config.hfVideoSpace
+      ? createHfSpaceVideoServiceFromEnv() ?? undefined
+      : undefined;
+
   const musicService =
     config.musicEnabled ? createMusicServiceFromEnv() ?? undefined : undefined;
 
   const bot = new Bot<AppContext>(config.telegramToken);
 
   bot.use(
-    createDepsMiddleware({ config, imageService, videoGifService, colabVideoService, musicService })
+    createDepsMiddleware({
+      config,
+      imageService,
+      videoGifService,
+      colabVideoService,
+      hfSpaceVideoService,
+      musicService,
+    })
   );
 
   bot.catch((err) => {
