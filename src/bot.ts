@@ -9,7 +9,7 @@ import { createColabVideoServiceFromEnv } from './services/colabVideoService';
 import { createHfSpaceVideoServiceFromEnv } from './services/hfSpaceVideoService';
 import { createMusicServiceFromEnv } from './services/musicService';
 import { registerHandlers } from './handlers';
-import { logError } from './utils/logger';
+import { logError, logInfo } from './utils/logger';
 
 export function createBot(): { bot: Bot<AppContext>; imageService: ImageService } {
   const config = loadConfig();
@@ -30,15 +30,25 @@ export function createBot(): { bot: Bot<AppContext>; imageService: ImageService 
   const videoGifService =
     config.videoGifEnabled ? createVideoGifServiceFromEnv(imageService) : undefined;
 
-  const colabVideoService =
-    config.colabVideoEnabled && config.videoApiUrl
-      ? createColabVideoServiceFromEnv(imageService) ?? undefined
-      : undefined;
-
   const hfSpaceVideoService =
     config.hfVideoEnabled && config.hfVideoSpace
       ? createHfSpaceVideoServiceFromEnv() ?? undefined
       : undefined;
+
+  const colabVideoService =
+    !hfSpaceVideoService &&
+    config.colabVideoEnabled &&
+    config.videoApiUrl
+      ? createColabVideoServiceFromEnv(imageService) ?? undefined
+      : undefined;
+
+  if (hfSpaceVideoService) {
+    logInfo('MP4 video provider: HF Space', { space: config.hfVideoSpace });
+  } else if (colabVideoService) {
+    logInfo('MP4 video provider: Colab/ngrok', { videoApi: config.videoApiUrl?.slice(0, 60) });
+  } else {
+    logInfo('MP4 video provider: none (set HF_VIDEO_SPACE or VIDEO_API)');
+  }
 
   const musicService =
     config.musicEnabled ? createMusicServiceFromEnv() ?? undefined : undefined;
