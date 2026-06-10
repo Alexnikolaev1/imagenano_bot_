@@ -1,4 +1,4 @@
-// HF Space video — chained short polls across Vercel invocations (beats 5 min limit)
+// HF Space video — poll loop inside waitUntil (no self-HTTP; avoids Vercel 508 infinite loop)
 
 import { createTranslator, type Lang } from '../i18n';
 import { createHfSpaceVideoApi } from './providers/hfSpaceVideoApi';
@@ -8,7 +8,7 @@ import { editMessage } from './telegramSender';
 import { consumeHfVideoRateLimit } from '../utils/rateLimit';
 import { downloadTelegramFile, bufferToBase64 } from '../utils/fileUtils';
 import { errorMessage } from '../utils/messages';
-import { logError, logInfo, logWarn } from '../utils/logger';
+import { logError, logInfo } from '../utils/logger';
 
 export interface HfVideoPollJob {
   eventId: string;
@@ -24,166 +24,92 @@ export interface HfVideoPollJob {
   attempts: number;
 }
 
-function getPollSecret(): string {
-  return (
-    process.env.VIDEO_POLL_SECRET?.trim() ||
-    process.env.TELEGRAM_BOT_TOKEN?.trim() ||
-    ''
-  );
-}
-
-function getVercelProtectionBypass(): string | undefined {
-  return (
-    process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim() ||
-    process.env.VERCEL_PROTECTION_BYPASS?.trim() ||
-    undefined
-  );
-}
-
-function buildPollRequestHeaders(secret: string): Record<string, string> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'x-video-poll-secret': secret,
-  };
-  const bypass = getVercelProtectionBypass();
-  if (bypass) {
-    headers['x-vercel-protection-bypass'] = bypass;
-  }
-  return headers;
-}
-
-function getAppBaseUrl(): string {
-  const raw = process.env.VERCEL_URL?.trim() || process.env.APP_BASE_URL?.trim();
-  if (!raw) return `http://127.0.0.1:${process.env.PORT || '3000'}`;
-  return raw.startsWith('http') ? raw.replace(/\/+$/, '') : `https://${raw}`;
-}
-
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function scheduleHfVideoPoll(job: HfVideoPollJob): Promise<boolean> {
-  const secret = getPollSecret();
-  if (!secret) {
-    logError('HF video poll: missing VIDEO_POLL_SECRET / TELEGRAM_BOT_TOKEN');
-    return false;
-  }
-
-  const bypass = getVercelProtectionBypass();
-  if (!bypass) {
-    logWarn(
-      'HF video poll: VERCEL_AUTOMATION_BYPASS_SECRET not set — self-calls may be blocked by Deployment Protection'
-    );
-  }
-
-  const delayMs = parseInt(process.env.HF_VIDEO_POLL_INTERVAL_MS || '5000', 10);
-  if (job.attempts > 0 && delayMs > 0) await sleep(delayMs);
-
-  let url = `${getAppBaseUrl()}/api/video-poll`;
-  if (bypass) {
-    url += `?x-vercel-protection-bypass=${encodeURIComponent(bypass)}`;
-  }
-
-  logInfo('HF video poll: scheduling next invocation', {
-    eventId: job.eventId,
-    attempt: job.attempts + 1,
-    url: url.replace(/x-vercel-protection-bypass=[^&]+/, 'x-vercel-protection-bypass=***'),
-    hasBypass: Boolean(bypass),
-  });
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: buildPollRequestHeaders(secret),
-      body: JSON.stringify(job),
-      signal: AbortSignal.timeout(30_000),
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      logError('HF video poll: schedule failed', { status: res.status, body: text.slice(0, 200) });
-      if (res.status === 401 && /authentication required/i.test(text)) {
-        await failHfVideoPoll(job, 'vercel_protection_blocked');
-      }
-      return false;
-    }
-    return true;
-  } catch (err) {
-    logError('HF video poll: schedule fetch error', err);
-    return false;
-  }
-}
-
-export async function processHfVideoPollJob(job: HfVideoPollJob): Promise<void> {
+/** Poll HF Space until video is ready, within one Vercel waitUntil (no /api/video-poll self-calls). */
+export async function runHfVideoPollLoop(job: HfVideoPollJob): Promise<void> {
+  const loopStarted = Date.now();
   const maxAgeMs = parseInt(process.env.HF_VIDEO_TIMEOUT_MS || '600000', 10);
   const maxAttempts = parseInt(process.env.HF_VIDEO_MAX_POLL_ATTEMPTS || '60', 10);
+  const pollIntervalMs = parseInt(process.env.HF_VIDEO_POLL_INTERVAL_MS || '5000', 10);
+  /** Stay under api/telegram maxDuration (default 300s on Vercel Hobby + Fluid). */
+  const vercelBudgetMs = parseInt(process.env.HF_VIDEO_VERCEL_BUDGET_MS || '280000', 10);
 
-  if (Date.now() - job.startedAt > maxAgeMs) {
-    await failHfVideoPoll(job, 'hf_space_timeout');
-    return;
-  }
-  if (job.attempts >= maxAttempts) {
-    await failHfVideoPoll(job, 'hf_space_timeout');
-    return;
-  }
-
-  job.attempts += 1;
   const api = createHfSpaceVideoApi(job.spaceRaw);
 
-  logInfo('HF video poll: tick', {
+  logInfo('HF video poll: loop started', {
     eventId: job.eventId,
-    attempt: job.attempts,
-    elapsedSec: Math.round((Date.now() - job.startedAt) / 1000),
+    vercelBudgetSec: Math.round(vercelBudgetMs / 1000),
   });
 
-  try {
-    const poll = await api.pollOnce(job.eventId);
+  while (
+    Date.now() - job.startedAt < maxAgeMs &&
+    Date.now() - loopStarted < vercelBudgetMs &&
+    job.attempts < maxAttempts
+  ) {
+    job.attempts += 1;
 
-    if (poll.status === 'error') {
-      await failHfVideoPoll(job, poll.error || 'hf_space_error');
-      return;
-    }
+    logInfo('HF video poll: tick', {
+      eventId: job.eventId,
+      attempt: job.attempts,
+      elapsedSec: Math.round((Date.now() - job.startedAt) / 1000),
+    });
 
-    if (poll.status === 'complete' && poll.output !== undefined) {
-      const videoResult = await api.downloadVideoOutput(poll.output);
-      if (!videoResult.success) {
-        await failHfVideoPoll(job, videoResult.error || 'hf_space_no_video');
+    try {
+      const poll = await api.pollOnce(job.eventId);
+
+      if (poll.status === 'error') {
+        await failHfVideoPoll(job, poll.error || 'hf_space_error');
         return;
       }
 
-      const t = createTranslator(job.lang);
-      const params: VideoJobParams = {
-        chatId: job.chatId,
-        statusMessageId: job.statusMessageId,
-        userId: job.userId,
-        type: job.jobType,
-        kind: 'mp4',
-        prompt: job.prompt,
-        lang: job.lang,
-        maxPerDay: job.maxPerDay,
-        videoService: { provider: 'hf_space', textToVideo: async () => videoResult, imageToVideo: async () => videoResult },
-        consumeRateLimit: consumeHfVideoRateLimit,
-        t,
-      };
+      if (poll.status === 'complete' && poll.output !== undefined) {
+        const videoResult = await api.downloadVideoOutput(poll.output);
+        if (!videoResult.success) {
+          await failHfVideoPoll(job, videoResult.error || 'hf_space_no_video');
+          return;
+        }
 
-      await deliverVideoResult(params, videoResult, job.startedAt);
-      logInfo('HF video poll: completed', { eventId: job.eventId, attempts: job.attempts });
-      return;
+        const t = createTranslator(job.lang);
+        const params: VideoJobParams = {
+          chatId: job.chatId,
+          statusMessageId: job.statusMessageId,
+          userId: job.userId,
+          type: job.jobType,
+          kind: 'mp4',
+          prompt: job.prompt,
+          lang: job.lang,
+          maxPerDay: job.maxPerDay,
+          videoService: {
+            provider: 'hf_space',
+            textToVideo: async () => videoResult,
+            imageToVideo: async () => videoResult,
+          },
+          consumeRateLimit: consumeHfVideoRateLimit,
+          t,
+        };
+
+        await deliverVideoResult(params, videoResult, job.startedAt);
+        logInfo('HF video poll: completed', { eventId: job.eventId, attempts: job.attempts });
+        return;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logError('HF video poll: tick failed', { eventId: job.eventId, message });
+      if (!/sleeping|queue|503|loading|timeout|aborted/i.test(message)) {
+        await failHfVideoPoll(job, 'hf_space_error');
+        return;
+      }
     }
 
-    const scheduled = await scheduleHfVideoPoll(job);
-    if (!scheduled) {
-      logError('HF video poll: chain stopped', { eventId: job.eventId });
+    if (Date.now() - loopStarted + pollIntervalMs < vercelBudgetMs) {
+      await sleep(pollIntervalMs);
     }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    logError('HF video poll: tick failed', { eventId: job.eventId, message });
-    if (/sleeping|queue|503|loading/i.test(message)) {
-      await scheduleHfVideoPoll(job).catch(() => undefined);
-      return;
-    }
-    await failHfVideoPoll(job, message.includes('timeout') ? 'hf_space_timeout' : 'hf_space_error');
   }
+
+  await failHfVideoPoll(job, 'hf_space_timeout');
 }
 
 async function failHfVideoPoll(job: HfVideoPollJob, errorCode: string): Promise<void> {
@@ -257,7 +183,7 @@ export async function startHfSpaceVideoJob(
       attempts: 0,
     };
 
-    await scheduleHfVideoPoll(job);
+    await runHfVideoPollLoop(job);
   } catch (err) {
     logError('startHfSpaceVideoJob failed', err);
     await editMessage(
@@ -267,11 +193,4 @@ export async function startHfSpaceVideoJob(
       { parse_mode: 'HTML' }
     ).catch(() => undefined);
   }
-}
-
-export function isValidPollSecret(header: string | string[] | undefined): boolean {
-  const expected = getPollSecret();
-  if (!expected) return false;
-  const value = Array.isArray(header) ? header[0] : header;
-  return value === expected;
 }
