@@ -2,7 +2,8 @@ import { Bot } from 'grammy';
 import type { AppContext } from '../context';
 import { resolveMp4Video } from '../services/mp4Video';
 import { assertVideoGifRateLimit } from '../services/rateLimitGuard';
-import { runVideoJob } from '../services/videoPipeline';
+import { runVideoJob, type VideoJobParams } from '../services/videoPipeline';
+import { runInBackground } from '../utils/backgroundJob';
 import { consumeVideoGifRateLimit } from '../utils/rateLimit';
 import { getUserLang } from '../storage/userPrefs';
 import { logError, logInfo } from '../utils/logger';
@@ -33,23 +34,20 @@ export function registerVideoHandlers(bot: Bot<AppContext>): void {
       const statusMsg = await ctx.reply(ctx.t('videoGenerating'), { parse_mode: 'HTML' });
       logInfo('Video command', { userId, provider: mp4.provider, prompt: rawPrompt.slice(0, 80) });
 
-      try {
-        await runVideoJob({
-          chatId,
-          statusMessageId: statusMsg.message_id,
-          userId,
-          type: 'text',
-          kind: 'mp4',
-          prompt: rawPrompt,
-          lang,
-          maxPerDay: mp4.maxPerDay,
-          videoService: mp4.service,
-          consumeRateLimit: mp4.consumeRateLimit,
-          t: ctx.t,
-        });
-      } catch (err) {
-        logError('Video command failed', err);
-      }
+      const job: VideoJobParams = {
+        chatId,
+        statusMessageId: statusMsg.message_id,
+        userId,
+        type: 'text',
+        kind: 'mp4',
+        prompt: rawPrompt,
+        lang,
+        maxPerDay: mp4.maxPerDay,
+        videoService: mp4.service,
+        consumeRateLimit: mp4.consumeRateLimit,
+        t: ctx.t,
+      };
+      runInBackground(() => runVideoJob(job));
       return;
     }
 

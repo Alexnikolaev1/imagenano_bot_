@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@types/dotenv": "^6.1.1",
+    "@vercel/functions": "^3.7.0",
     "@vercel/node": "^5.8.6",
     "dotenv": "^17.4.2",
     "gifenc": "^1.0.3",

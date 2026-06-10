@@ -127,9 +127,13 @@ export class HfSpaceVideoApiClient {
     const pollUrl = `${this.config.baseUrl}/gradio_api/call/generate_video/${eventId}`;
 
     while (Date.now() < deadline) {
+      // Gradio SSE may hold the connection until generation finishes (minutes).
+      const remainingMs = deadline - Date.now();
+      const fetchTimeoutMs = Math.min(Math.max(remainingMs, 5_000), 290_000);
+
       const res = await fetch(pollUrl, {
         headers: this.authHeaders(),
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.timeout(fetchTimeoutMs),
       });
 
       const text = await res.text();
@@ -293,7 +297,9 @@ function mapClientError(message: string): VideoResult {
   ) {
     return { success: false, error: message };
   }
-  if (/timeout|aborted/i.test(message)) return { success: false, error: 'hf_space_timeout' };
+  if (/timeout|aborted/i.test(message)) {
+    return { success: false, error: 'hf_space_timeout' };
+  }
   if (/sleeping|queue|503|loading/i.test(message)) return { success: false, error: 'hf_space_sleeping' };
   return { success: false, error: message.slice(0, 200) || 'hf_space_error' };
 }
