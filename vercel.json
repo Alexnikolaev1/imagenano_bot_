@@ -1,7 +1,10 @@
 {
   "functions": {
     "api/telegram.ts": {
-      "maxDuration": 300
+      "maxDuration": 60
+    },
+    "api/video-poll.ts": {
+      "maxDuration": 60
     }
   }
 }

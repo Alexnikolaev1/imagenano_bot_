@@ -109,8 +109,8 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
 
     case 'hf_space_timeout':
       return isRu
-        ? '⏳ <b>HF Space не успел сгенерировать видео.</b>\n\nПопробуйте проще сцену. На Vercel Hobby лимит функции ~5 мин — включите Fluid Compute и <code>maxDuration: 300</code> в vercel.json.'
-        : '⏳ <b>HF Space video timed out.</b>\n\nTry a simpler scene. On Vercel Hobby the function limit is ~5 min — enable Fluid Compute and <code>maxDuration: 300</code> in vercel.json.';
+        ? '⏳ <b>HF Space не успел сгенерировать видео за отведённое время.</b>\n\nПопробуйте короче промпт или <code>HF_VIDEO_FRAMES=25</code>. Генерация LTX может занять 3–8 минут.'
+        : '⏳ <b>HF Space video timed out.</b>\n\nTry a shorter prompt or <code>HF_VIDEO_FRAMES=25</code>. LTX generation can take 3–8 minutes.';
 
     case 'hf_space_no_video':
     case 'hf_space_bad_response':

@@ -1,6 +1,8 @@
 // src/services/videoPipeline.ts — text/image-to-video (mp4, GIF, or preview still)
 
 import type { VideoGenerator } from './videoGenerator';
+import type { HfSpaceVideoService } from './hfSpaceVideoService';
+import { startHfSpaceVideoJob } from './hfVideoPollJob';
 import { sendAnimation, sendPhoto, sendVideo, sendVideoBase64, editMessage } from './telegramSender';
 import { downloadTelegramFile, bufferToBase64 } from '../utils/fileUtils';
 import { errorMessage, escapeHtml } from '../utils/messages';
@@ -28,6 +30,11 @@ export interface VideoJobParams {
 }
 
 export async function runVideoJob(params: VideoJobParams): Promise<void> {
+  if (params.kind === 'mp4' && params.videoService.provider === 'hf_space') {
+    await startHfSpaceVideoJob(params, params.videoService as HfSpaceVideoService);
+    return;
+  }
+
   const {
     chatId,
     statusMessageId,
@@ -75,47 +82,7 @@ export async function runVideoJob(params: VideoJobParams): Promise<void> {
       return;
     }
 
-    consumeRateLimit(userId, maxPerDay);
-
-    const elapsed = Math.round((Date.now() - started) / 1000);
-    const caption = buildCaption(result, type, kind, prompt, t);
-
-    if (result.mode === 'gif' && result.imageBase64) {
-      await editMessage(chatId, statusMessageId, t('videoGifSending', { seconds: String(elapsed) }));
-      logInfo('Sending GIF clip to Telegram', { userId, provider: videoService.provider });
-      await sendAnimation(chatId, result.imageBase64, caption);
-      await editMessage(chatId, statusMessageId, t('videoGifSent'));
-      return;
-    }
-
-    if (result.mode === 'preview' && result.imageBase64) {
-      await editMessage(chatId, statusMessageId, t('videoPreviewSending', { seconds: String(elapsed) }));
-      logInfo('Sending preview still to Telegram', { userId, provider: videoService.provider });
-      await sendPhoto(chatId, result.imageBase64, result.mimeType || 'image/jpeg', caption);
-      await editMessage(chatId, statusMessageId, t('videoPreviewSent'));
-      return;
-    }
-
-    if (!result.videoUrl && !result.videoBase64) {
-      await editMessage(chatId, statusMessageId, errorMessage('unknown', undefined, lang), {
-        parse_mode: 'HTML',
-      });
-      return;
-    }
-
-    await editMessage(chatId, statusMessageId, t('videoDoneSending', { seconds: String(elapsed) }));
-    logInfo('Sending mp4 video to Telegram', { userId, provider: videoService.provider });
-    if (result.videoBase64) {
-      await sendVideoBase64(
-        chatId,
-        result.videoBase64,
-        result.mimeType || 'video/mp4',
-        caption
-      );
-    } else {
-      await sendVideo(chatId, result.videoUrl!, caption);
-    }
-    await editMessage(chatId, statusMessageId, t('videoSent'));
+    await deliverVideoResult(params, result, started);
   } catch (err) {
     logError('runVideoJob failed', err);
     await editMessage(
@@ -125,6 +92,63 @@ export async function runVideoJob(params: VideoJobParams): Promise<void> {
       { parse_mode: 'HTML' }
     ).catch(() => undefined);
   }
+}
+
+export async function deliverVideoResult(
+  params: VideoJobParams,
+  result: VideoResult,
+  startedAt: number
+): Promise<void> {
+  const {
+    chatId,
+    statusMessageId,
+    userId,
+    type,
+    kind,
+    prompt,
+    videoService,
+    t,
+    lang,
+    maxPerDay,
+    consumeRateLimit,
+  } = params;
+
+  consumeRateLimit(userId, maxPerDay);
+
+  const elapsed = Math.round((Date.now() - startedAt) / 1000);
+  const caption = buildCaption(result, type, kind, prompt, t);
+
+  if (result.mode === 'gif' && result.imageBase64) {
+    await editMessage(chatId, statusMessageId, t('videoGifSending', { seconds: String(elapsed) }));
+    logInfo('Sending GIF clip to Telegram', { userId, provider: videoService.provider });
+    await sendAnimation(chatId, result.imageBase64, caption);
+    await editMessage(chatId, statusMessageId, t('videoGifSent'));
+    return;
+  }
+
+  if (result.mode === 'preview' && result.imageBase64) {
+    await editMessage(chatId, statusMessageId, t('videoPreviewSending', { seconds: String(elapsed) }));
+    logInfo('Sending preview still to Telegram', { userId, provider: videoService.provider });
+    await sendPhoto(chatId, result.imageBase64, result.mimeType || 'image/jpeg', caption);
+    await editMessage(chatId, statusMessageId, t('videoPreviewSent'));
+    return;
+  }
+
+  if (!result.videoUrl && !result.videoBase64) {
+    await editMessage(chatId, statusMessageId, errorMessage('unknown', undefined, lang), {
+      parse_mode: 'HTML',
+    });
+    return;
+  }
+
+  await editMessage(chatId, statusMessageId, t('videoDoneSending', { seconds: String(elapsed) }));
+  logInfo('Sending mp4 video to Telegram', { userId, provider: videoService.provider });
+  if (result.videoBase64) {
+    await sendVideoBase64(chatId, result.videoBase64, result.mimeType || 'video/mp4', caption);
+  } else {
+    await sendVideo(chatId, result.videoUrl!, caption);
+  }
+  await editMessage(chatId, statusMessageId, t('videoSent'));
 }
 
 function buildCaption(

@@ -16,10 +16,15 @@ export interface HfSpaceVideoApiConfig {
   negativePrompt: string;
 }
 
+export type HfPollOnceResult =
+  | { status: 'pending' }
+  | { status: 'complete'; output: unknown }
+  | { status: 'error'; error: string };
+
 export class HfSpaceVideoApiClient {
   constructor(private config: HfSpaceVideoApiConfig) {}
 
-  async generateFromPrompt(prompt: string, imageUrl?: string): Promise<VideoResult> {
+  async submitGeneration(prompt: string, imageUrl?: string): Promise<string> {
     const data = [
       prompt.trim(),
       this.config.negativePrompt,
@@ -30,21 +35,81 @@ export class HfSpaceVideoApiClient {
       imageUrl?.trim() || '',
     ];
 
+    logInfo('HF Space video submit', {
+      baseUrl: this.config.baseUrl,
+      prompt: prompt.slice(0, 80),
+      hasImageUrl: Boolean(imageUrl?.trim()),
+    });
+
+    return this.submitCall(data);
+  }
+
+  /** One short poll — safe inside a 60s Vercel invocation; reconnects to the same event_id. */
+  async pollOnce(eventId: string): Promise<HfPollOnceResult> {
+    const pollUrl = `${this.config.baseUrl}/gradio_api/call/generate_video/${eventId}`;
+    const timeoutMs = parseInt(process.env.HF_VIDEO_POLL_FETCH_MS || '25000', 10);
+
     try {
-      logInfo('HF Space video submit', {
-        baseUrl: this.config.baseUrl,
-        prompt: prompt.slice(0, 80),
-        hasImageUrl: Boolean(imageUrl?.trim()),
+      const res = await fetch(pollUrl, {
+        headers: this.authHeaders(),
+        signal: AbortSignal.timeout(timeoutMs),
       });
 
-      const eventId = await this.submitCall(data);
-      const output = await this.pollUntilComplete(eventId);
-      return await this.downloadVideoOutput(output);
+      const text = await res.text();
+      if (!res.ok) {
+        return { status: 'error', error: normalizeHttpError(res.status, text) };
+      }
+
+      const parsed = parsePollResponse(text);
+      if (parsed.status === 'error') {
+        return { status: 'error', error: parsed.error || 'hf_space_error' };
+      }
+      if (parsed.status === 'complete' && parsed.output !== undefined) {
+        return { status: 'complete', output: parsed.output };
+      }
+      return { status: 'pending' };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      logError('HF Space video failed', { message });
-      return mapClientError(message);
+      if (/timeout|aborted/i.test(message)) {
+        return { status: 'pending' };
+      }
+      throw err;
     }
+  }
+
+  async downloadVideoOutput(output: unknown): Promise<VideoResult> {
+    const file = extractFileData(output);
+    if (!file) {
+      logWarn('HF Space output without file', { output });
+      return { success: false, error: 'hf_space_no_video' };
+    }
+
+    const downloadUrl =
+      file.url ||
+      (file.path ? `${this.config.baseUrl}/gradio_api/file=${encodeURIComponent(file.path)}` : undefined);
+
+    if (!downloadUrl) return { success: false, error: 'hf_space_no_video' };
+
+    const res = await fetch(downloadUrl, {
+      headers: this.authHeaders(),
+      signal: AbortSignal.timeout(45_000),
+    });
+
+    if (!res.ok) {
+      logWarn('HF Space video download failed', { status: res.status, url: downloadUrl.slice(0, 100) });
+      return { success: false, error: 'hf_space_no_video' };
+    }
+
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length === 0) return { success: false, error: 'hf_space_no_video' };
+
+    logInfo('HF Space video downloaded', { bytes: buf.length });
+    return {
+      success: true,
+      mode: 'video',
+      videoBase64: buf.toString('base64'),
+      mimeType: file.mime_type || 'video/mp4',
+    };
   }
 
   /** Upload image to Space temp storage; returns a URL load_image() can fetch. */
@@ -122,73 +187,6 @@ export class HfSpaceVideoApiClient {
     return body.event_id;
   }
 
-  private async pollUntilComplete(eventId: string): Promise<unknown> {
-    const deadline = Date.now() + this.config.timeoutMs;
-    const pollUrl = `${this.config.baseUrl}/gradio_api/call/generate_video/${eventId}`;
-
-    while (Date.now() < deadline) {
-      // Gradio SSE may hold the connection until generation finishes (minutes).
-      const remainingMs = deadline - Date.now();
-      const fetchTimeoutMs = Math.min(Math.max(remainingMs, 5_000), 290_000);
-
-      const res = await fetch(pollUrl, {
-        headers: this.authHeaders(),
-        signal: AbortSignal.timeout(fetchTimeoutMs),
-      });
-
-      const text = await res.text();
-      if (!res.ok) {
-        throw new Error(normalizeHttpError(res.status, text));
-      }
-
-      const parsed = parsePollResponse(text);
-      if (parsed.status === 'error') {
-        throw new Error(parsed.error || 'hf_space_error');
-      }
-      if (parsed.status === 'complete') {
-        return parsed.output;
-      }
-
-      await sleep(this.config.pollIntervalMs);
-    }
-
-    throw new Error('hf_space_timeout');
-  }
-
-  private async downloadVideoOutput(output: unknown): Promise<VideoResult> {
-    const file = extractFileData(output);
-    if (!file) {
-      logWarn('HF Space output without file', { output });
-      return { success: false, error: 'hf_space_no_video' };
-    }
-
-    const downloadUrl =
-      file.url ||
-      (file.path ? `${this.config.baseUrl}/gradio_api/file=${encodeURIComponent(file.path)}` : undefined);
-
-    if (!downloadUrl) return { success: false, error: 'hf_space_no_video' };
-
-    const res = await fetch(downloadUrl, {
-      headers: this.authHeaders(),
-      signal: AbortSignal.timeout(120_000),
-    });
-
-    if (!res.ok) {
-      logWarn('HF Space video download failed', { status: res.status, url: downloadUrl.slice(0, 100) });
-      return { success: false, error: 'hf_space_no_video' };
-    }
-
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length === 0) return { success: false, error: 'hf_space_no_video' };
-
-    logInfo('HF Space video downloaded', { bytes: buf.length });
-    return {
-      success: true,
-      mode: 'video',
-      videoBase64: buf.toString('base64'),
-      mimeType: file.mime_type || 'video/mp4',
-    };
-  }
 }
 
 function parsePollResponse(text: string): {
@@ -284,32 +282,8 @@ function normalizeHttpError(status: number, raw: string): string {
   return raw.slice(0, 200) || 'hf_space_error';
 }
 
-function mapClientError(message: string): VideoResult {
-  if (
-    message === 'hf_space_timeout' ||
-    message === 'hf_space_no_video' ||
-    message === 'hf_space_bad_response' ||
-    message === 'hf_space_error' ||
-    message === 'hf_space_sleeping' ||
-    message === 'hf_auth_error' ||
-    message === 'rate_limit' ||
-    message === 'hf_space_upload_failed'
-  ) {
-    return { success: false, error: message };
-  }
-  if (/timeout|aborted/i.test(message)) {
-    return { success: false, error: 'hf_space_timeout' };
-  }
-  if (/sleeping|queue|503|loading/i.test(message)) return { success: false, error: 'hf_space_sleeping' };
-  return { success: false, error: message.slice(0, 200) || 'hf_space_error' };
-}
-
 function randomUploadId(): string {
   return Math.random().toString(36).slice(2, 14);
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /** alex555196/videobot → https://alex555196-videobot.hf.space */

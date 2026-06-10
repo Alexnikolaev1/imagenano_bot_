@@ -16,7 +16,7 @@ function getHandler(): WebhookHandler {
     // Wait for handlers (including image generation + sendPhoto) before responding.
     // Must exceed typical Cloudflare + Telegram round-trip; matches maxDuration in vercel.json.
     handlerCache = webhookCallback(bot, 'http', {
-      timeoutMilliseconds: 295_000,
+      timeoutMilliseconds: 55_000,
     }) as unknown as WebhookHandler;
   }
   return handlerCache;
