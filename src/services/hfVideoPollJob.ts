@@ -8,7 +8,7 @@ import { editMessage } from './telegramSender';
 import { consumeHfVideoRateLimit } from '../utils/rateLimit';
 import { downloadTelegramFile, bufferToBase64 } from '../utils/fileUtils';
 import { errorMessage } from '../utils/messages';
-import { logError, logInfo } from '../utils/logger';
+import { logError, logInfo, logWarn } from '../utils/logger';
 
 export interface HfVideoPollJob {
   eventId: string;
@@ -32,6 +32,26 @@ function getPollSecret(): string {
   );
 }
 
+function getVercelProtectionBypass(): string | undefined {
+  return (
+    process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim() ||
+    process.env.VERCEL_PROTECTION_BYPASS?.trim() ||
+    undefined
+  );
+}
+
+function buildPollRequestHeaders(secret: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'x-video-poll-secret': secret,
+  };
+  const bypass = getVercelProtectionBypass();
+  if (bypass) {
+    headers['x-vercel-protection-bypass'] = bypass;
+  }
+  return headers;
+}
+
 function getAppBaseUrl(): string {
   const raw = process.env.VERCEL_URL?.trim() || process.env.APP_BASE_URL?.trim();
   if (!raw) return `http://127.0.0.1:${process.env.PORT || '3000'}`;
@@ -42,36 +62,55 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function scheduleHfVideoPoll(job: HfVideoPollJob): Promise<void> {
+export async function scheduleHfVideoPoll(job: HfVideoPollJob): Promise<boolean> {
   const secret = getPollSecret();
   if (!secret) {
     logError('HF video poll: missing VIDEO_POLL_SECRET / TELEGRAM_BOT_TOKEN');
-    return;
+    return false;
+  }
+
+  const bypass = getVercelProtectionBypass();
+  if (!bypass) {
+    logWarn(
+      'HF video poll: VERCEL_AUTOMATION_BYPASS_SECRET not set — self-calls may be blocked by Deployment Protection'
+    );
   }
 
   const delayMs = parseInt(process.env.HF_VIDEO_POLL_INTERVAL_MS || '5000', 10);
   if (job.attempts > 0 && delayMs > 0) await sleep(delayMs);
 
-  const url = `${getAppBaseUrl()}/api/video-poll`;
+  let url = `${getAppBaseUrl()}/api/video-poll`;
+  if (bypass) {
+    url += `?x-vercel-protection-bypass=${encodeURIComponent(bypass)}`;
+  }
+
   logInfo('HF video poll: scheduling next invocation', {
     eventId: job.eventId,
     attempt: job.attempts + 1,
-    url,
+    url: url.replace(/x-vercel-protection-bypass=[^&]+/, 'x-vercel-protection-bypass=***'),
+    hasBypass: Boolean(bypass),
   });
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-video-poll-secret': secret,
-    },
-    body: JSON.stringify(job),
-    signal: AbortSignal.timeout(30_000),
-  });
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: buildPollRequestHeaders(secret),
+      body: JSON.stringify(job),
+      signal: AbortSignal.timeout(30_000),
+    });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    logError('HF video poll: schedule failed', { status: res.status, body: text.slice(0, 200) });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      logError('HF video poll: schedule failed', { status: res.status, body: text.slice(0, 200) });
+      if (res.status === 401 && /authentication required/i.test(text)) {
+        await failHfVideoPoll(job, 'vercel_protection_blocked');
+      }
+      return false;
+    }
+    return true;
+  } catch (err) {
+    logError('HF video poll: schedule fetch error', err);
+    return false;
   }
 }
 
@@ -132,12 +171,15 @@ export async function processHfVideoPollJob(job: HfVideoPollJob): Promise<void> 
       return;
     }
 
-    await scheduleHfVideoPoll(job);
+    const scheduled = await scheduleHfVideoPoll(job);
+    if (!scheduled) {
+      logError('HF video poll: chain stopped', { eventId: job.eventId });
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logError('HF video poll: tick failed', { eventId: job.eventId, message });
     if (/sleeping|queue|503|loading/i.test(message)) {
-      await scheduleHfVideoPoll(job);
+      await scheduleHfVideoPoll(job).catch(() => undefined);
       return;
     }
     await failHfVideoPoll(job, message.includes('timeout') ? 'hf_space_timeout' : 'hf_space_error');

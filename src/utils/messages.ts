@@ -128,6 +128,11 @@ export function errorMessage(errorCode: string, resetIn?: number, lang: Lang = '
         ? '⚠️ <b>Ошибка HF Space.</b>\n\nПроверьте, что Space Running и <code>HF_VIDEO_SPACE</code> указан верно.'
         : '⚠️ <b>HF Space error.</b>\n\nEnsure the Space is Running and <code>HF_VIDEO_SPACE</code> is correct.';
 
+    case 'vercel_protection_blocked':
+      return isRu
+        ? '🔒 <b>Vercel блокирует внутренние запросы бота.</b>\n\nВ Vercel → Project → Settings → Deployment Protection включите <b>Protection Bypass for Automation</b> и redeploy.\n\nПеременная <code>VERCEL_AUTOMATION_BYPASS_SECRET</code> появится автоматически.'
+        : '🔒 <b>Vercel blocked the bot’s internal poll requests.</b>\n\nIn Vercel → Project → Settings → Deployment Protection, enable <b>Protection Bypass for Automation</b> and redeploy.\n\n<code>VERCEL_AUTOMATION_BYPASS_SECRET</code> is set automatically.';
+
     case 'video_not_configured':
       return isRu
         ? '🎞 <b>Видео не настроено.</b>\n\nПроверьте ключи Cloudflare на сервере (<code>CLOUDFLARE_ACCOUNT_ID</code>, <code>CLOUDFLARE_API_TOKEN</code>).'
