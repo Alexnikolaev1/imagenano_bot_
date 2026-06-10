@@ -6,7 +6,7 @@ import { ImageService } from './services/imageService';
 import { PromptEnhancer } from './services/promptEnhancer';
 import { createVideoGifServiceFromEnv } from './services/videoGifService';
 import { createColabVideoServiceFromEnv } from './services/colabVideoService';
-import { createHfSpaceVideoServiceFromEnv } from './services/hfSpaceVideoService';
+import { createHfSpaceVideoService } from './services/hfSpaceVideoService';
 import { createMusicServiceFromEnv } from './services/musicService';
 import { registerHandlers } from './handlers';
 import { logError, logInfo } from './utils/logger';
@@ -30,10 +30,7 @@ export function createBot(): { bot: Bot<AppContext>; imageService: ImageService 
   const videoGifService =
     config.videoGifEnabled ? createVideoGifServiceFromEnv(imageService) : undefined;
 
-  const hfSpaceVideoService =
-    config.hfVideoEnabled && config.hfVideoSpace
-      ? createHfSpaceVideoServiceFromEnv() ?? undefined
-      : undefined;
+  const hfSpaceVideoService = createHfSpaceVideoService(config) ?? undefined;
 
   const colabVideoService =
     !hfSpaceVideoService &&
@@ -47,7 +44,13 @@ export function createBot(): { bot: Bot<AppContext>; imageService: ImageService 
   } else if (colabVideoService) {
     logInfo('MP4 video provider: Colab/ngrok', { videoApi: config.videoApiUrl?.slice(0, 60) });
   } else {
-    logInfo('MP4 video provider: none (set HF_VIDEO_SPACE or VIDEO_API)');
+    logInfo('MP4 video provider: none', {
+      hint: 'HUGGINGFACE_TOKEN enables HF Space by default, or set HF_VIDEO_SPACE',
+    });
+  }
+
+  if (config.videoApiUrl && !colabVideoService) {
+    logInfo('VIDEO_API ignored (Colab disabled). Remove it from Vercel or set COLAB_VIDEO_ENABLED=true');
   }
 
   const musicService =

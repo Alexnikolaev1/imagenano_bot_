@@ -2,6 +2,21 @@
 
 import { normalizeEditModel, normalizeGenerateModel } from './utils/cloudflareModel';
 
+/** Default LTX-Video Space when HUGGINGFACE_TOKEN is set and HF_VIDEO_SPACE is omitted */
+export const DEFAULT_HF_VIDEO_SPACE = 'alex555196/videobot';
+
+export function resolveHfVideoSpaceFromEnv(): string | undefined {
+  const explicit =
+    process.env.HF_VIDEO_SPACE?.trim() ||
+    process.env.HF_VIDEO_SPACE_URL?.trim();
+  if (explicit) return explicit;
+  if (process.env.HF_VIDEO_ENABLED === 'false') return undefined;
+  const token =
+    process.env.HUGGINGFACE_TOKEN?.trim() || process.env.HF_TOKEN?.trim();
+  if (token) return DEFAULT_HF_VIDEO_SPACE;
+  return undefined;
+}
+
 export interface AppConfig {
   telegramToken: string;
   /** Cloudflare Workers AI credentials (image generation) */
@@ -90,11 +105,9 @@ export function loadConfig(): AppConfig {
         '5',
       10
     ),
-    colabVideoEnabled: process.env.COLAB_VIDEO_ENABLED !== 'false',
-    hfVideoSpace:
-      process.env.HF_VIDEO_SPACE?.trim() ||
-      process.env.HF_VIDEO_SPACE_URL?.trim() ||
-      undefined,
+    // Colab only when explicitly enabled — stale VIDEO_API must not override HF Space
+    colabVideoEnabled: process.env.COLAB_VIDEO_ENABLED === 'true',
+    hfVideoSpace: resolveHfVideoSpaceFromEnv(),
     maxHfVideoRequestsPerDay: parseInt(
       process.env.MAX_HF_VIDEO_REQUESTS_PER_DAY ||
         process.env.MAX_VIDEO_REQUESTS_PER_DAY ||

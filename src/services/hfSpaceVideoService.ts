@@ -1,7 +1,8 @@
 // HF Space LTX-Video — text/image-to-video via Gradio API
 
+import type { AppConfig } from '../config';
 import type { VideoGenerator } from './videoGenerator';
-import { HfSpaceVideoApiClient, createHfSpaceVideoApiFromEnv } from './providers/hfSpaceVideoApi';
+import { HfSpaceVideoApiClient, createHfSpaceVideoApi } from './providers/hfSpaceVideoApi';
 import type { VideoResult } from '../types';
 import { logInfo } from '../utils/logger';
 
@@ -27,8 +28,7 @@ export class HfSpaceVideoService implements VideoGenerator {
   }
 }
 
-export function createHfSpaceVideoServiceFromEnv(): HfSpaceVideoService | null {
-  const api = createHfSpaceVideoApiFromEnv();
-  if (!api) return null;
-  return new HfSpaceVideoService(api);
+export function createHfSpaceVideoService(config: AppConfig): HfSpaceVideoService | null {
+  if (!config.hfVideoEnabled || !config.hfVideoSpace) return null;
+  return new HfSpaceVideoService(createHfSpaceVideoApi(config.hfVideoSpace));
 }

@@ -1,5 +1,6 @@
 // Hugging Face Space — Gradio API (LTX-Video via alex555196/videobot)
 
+import { resolveHfVideoSpaceFromEnv } from '../../config';
 import { logError, logInfo, logWarn } from '../../utils/logger';
 import type { VideoResult } from '../../types';
 
@@ -313,12 +314,7 @@ export function resolveHfSpaceBaseUrl(raw: string): string {
   return `https://${slug}.hf.space`;
 }
 
-export function createHfSpaceVideoApiFromEnv(): HfSpaceVideoApiClient | null {
-  const spaceRaw =
-    process.env.HF_VIDEO_SPACE?.trim() ||
-    process.env.HF_VIDEO_SPACE_URL?.trim();
-  if (!spaceRaw) return null;
-
+export function createHfSpaceVideoApi(spaceRaw: string): HfSpaceVideoApiClient {
   const apiToken =
     process.env.HUGGINGFACE_TOKEN?.trim() || process.env.HF_TOKEN?.trim() || undefined;
 
@@ -346,4 +342,10 @@ export function createHfSpaceVideoApiFromEnv(): HfSpaceVideoApiClient | null {
     seed,
     negativePrompt,
   });
+}
+
+export function createHfSpaceVideoApiFromEnv(): HfSpaceVideoApiClient | null {
+  const spaceRaw = resolveHfVideoSpaceFromEnv();
+  if (!spaceRaw) return null;
+  return createHfSpaceVideoApi(spaceRaw);
 }
