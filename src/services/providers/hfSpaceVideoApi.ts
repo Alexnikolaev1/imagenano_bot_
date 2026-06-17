@@ -44,37 +44,70 @@ export class HfSpaceVideoApiClient {
     return this.submitCall(data);
   }
 
-  /** One short poll — safe inside a 60s Vercel invocation; reconnects to the same event_id. */
-  async pollOnce(eventId: string): Promise<HfPollOnceResult> {
+  /**
+   * Hold the Gradio SSE connection until complete or budget exhausted.
+   * Short polls + reconnect lose the result — Gradio does not replay "complete" on a new GET.
+   */
+  async pollUntilReady(eventId: string, maxMs: number): Promise<HfPollOnceResult> {
     const pollUrl = `${this.config.baseUrl}/gradio_api/call/generate_video/${eventId}`;
-    const timeoutMs = parseInt(process.env.HF_VIDEO_POLL_FETCH_MS || '25000', 10);
+    const deadline = Date.now() + maxMs;
+    let reconnect = 0;
+    const maxReconnects = parseInt(process.env.HF_VIDEO_MAX_RECONNECTS || '2', 10);
 
-    try {
-      const res = await fetch(pollUrl, {
-        headers: this.authHeaders(),
-        signal: AbortSignal.timeout(timeoutMs),
+    while (Date.now() < deadline && reconnect <= maxReconnects) {
+      const remaining = deadline - Date.now();
+      const fetchMs = Math.min(Math.max(remaining, 20_000), 275_000);
+
+      logInfo('HF Space poll: opening SSE', {
+        eventId,
+        reconnect,
+        fetchSec: Math.round(fetchMs / 1000),
       });
 
-      const text = await res.text();
-      if (!res.ok) {
-        return { status: 'error', error: normalizeHttpError(res.status, text) };
-      }
+      try {
+        const res = await fetch(pollUrl, {
+          headers: this.authHeaders(),
+          signal: AbortSignal.timeout(fetchMs),
+        });
 
-      const parsed = parsePollResponse(text);
-      if (parsed.status === 'error') {
-        return { status: 'error', error: parsed.error || 'hf_space_error' };
+        const text = await res.text();
+
+        if (!res.ok) {
+          return { status: 'error', error: normalizeHttpError(res.status, text) };
+        }
+
+        const parsed = parsePollResponse(text);
+        logInfo('HF Space poll: SSE closed', {
+          eventId,
+          reconnect,
+          status: parsed.status,
+          bytes: text.length,
+        });
+
+        if (parsed.status === 'error') {
+          return { status: 'error', error: parsed.error || 'hf_space_error' };
+        }
+        if (parsed.status === 'complete' && parsed.output !== undefined) {
+          return { status: 'complete', output: parsed.output };
+        }
+
+        if (Date.now() < deadline) {
+          reconnect += 1;
+          await sleep(3000);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (/timeout|aborted/i.test(message) && Date.now() < deadline) {
+          reconnect += 1;
+          logInfo('HF Space poll: SSE timeout, reconnecting', { eventId, reconnect, message });
+          await sleep(3000);
+          continue;
+        }
+        throw err;
       }
-      if (parsed.status === 'complete' && parsed.output !== undefined) {
-        return { status: 'complete', output: parsed.output };
-      }
-      return { status: 'pending' };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (/timeout|aborted/i.test(message)) {
-        return { status: 'pending' };
-      }
-      throw err;
     }
+
+    return { status: 'pending' };
   }
 
   async downloadVideoOutput(output: unknown): Promise<VideoResult> {
@@ -197,14 +230,16 @@ function parsePollResponse(text: string): {
   const trimmed = text.trim();
   if (!trimmed) return { status: 'pending' };
 
+  const deepFile = findFileDataInText(trimmed);
+  if (deepFile) return { status: 'complete', output: deepFile };
+
   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
     try {
       const json = JSON.parse(trimmed) as Record<string, unknown>;
       if (json.error) return { status: 'error', error: String(json.error) };
-      if (json.output !== undefined) return { status: 'complete', output: json.output };
-      if (Array.isArray(json)) {
-        const last = json[json.length - 1];
-        if (last && typeof last === 'object') return { status: 'complete', output: last };
+      if (json.output !== undefined) {
+        const file = extractFileDataDeep(json.output);
+        if (file) return { status: 'complete', output: file };
       }
     } catch {
       // fall through to SSE parsing
@@ -212,12 +247,35 @@ function parsePollResponse(text: string): {
   }
 
   let lastData: unknown;
+  let sawCompleteEvent = false;
+
   for (const line of text.split('\n')) {
-    if (!line.startsWith('data:')) continue;
-    const payload = line.slice(line.indexOf(':') + 1).trim();
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith('event:')) {
+      const eventName = trimmedLine.slice(6).trim().toLowerCase();
+      if (eventName === 'complete' || eventName === 'completion') {
+        sawCompleteEvent = true;
+      }
+      continue;
+    }
+    if (!trimmedLine.startsWith('data:')) continue;
+
+    const payload = trimmedLine.slice(trimmedLine.indexOf(':') + 1).trim();
     if (!payload || payload === 'null') continue;
+
     try {
       lastData = JSON.parse(payload);
+      const file = extractFileDataDeep(lastData);
+      if (file) return { status: 'complete', output: file };
+
+      if (typeof lastData === 'object' && lastData !== null) {
+        const msg = (lastData as { msg?: string }).msg;
+        if (msg === 'process_completed' || msg === 'process_complete') {
+          const out = (lastData as { output?: unknown }).output;
+          const outFile = extractFileDataDeep(out);
+          if (outFile) return { status: 'complete', output: outFile };
+        }
+      }
     } catch {
       continue;
     }
@@ -230,16 +288,35 @@ function parsePollResponse(text: string): {
       const msg = typeof lastData[1] === 'string' ? lastData[1] : 'hf_space_error';
       return { status: 'error', error: msg };
     }
-    if (lastData[0] === 'complete' || extractFileData(lastData[1] ?? lastData)) {
-      return { status: 'complete', output: lastData[1] ?? lastData };
+    if (lastData[0] === 'complete' || sawCompleteEvent) {
+      const file = extractFileDataDeep(lastData[1] ?? lastData);
+      if (file) return { status: 'complete', output: file };
     }
   }
 
-  if (typeof lastData === 'object' && lastData !== null && extractFileData(lastData)) {
-    return { status: 'complete', output: lastData };
-  }
+  const file = extractFileDataDeep(lastData);
+  if (file) return { status: 'complete', output: file };
 
   return { status: 'pending' };
+}
+
+function findFileDataInText(text: string): GradioFileData | null {
+  for (const line of text.split('\n')) {
+    const trimmedLine = line.trim();
+    let payload = trimmedLine;
+    if (trimmedLine.startsWith('data:')) {
+      payload = trimmedLine.slice(trimmedLine.indexOf(':') + 1).trim();
+    }
+    if (!payload.startsWith('[') && !payload.startsWith('{')) continue;
+    try {
+      const json = JSON.parse(payload);
+      const file = extractFileDataDeep(json);
+      if (file) return file;
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 interface GradioFileData {
@@ -249,14 +326,20 @@ interface GradioFileData {
 }
 
 function extractFileData(output: unknown): GradioFileData | null {
+  return extractFileDataDeep(output);
+}
+
+function extractFileDataDeep(output: unknown): GradioFileData | null {
   if (!output) return null;
   if (typeof output === 'object' && !Array.isArray(output)) {
-    const obj = output as GradioFileData;
-    if (obj.path || obj.url) return obj;
+    const obj = output as GradioFileData & { data?: unknown; output?: unknown };
+    if (obj.path || obj.url) return { path: obj.path, url: obj.url, mime_type: obj.mime_type };
+    const nested = extractFileDataDeep(obj.data) ?? extractFileDataDeep(obj.output);
+    if (nested) return nested;
   }
   if (Array.isArray(output)) {
     for (const item of output) {
-      const file = extractFileData(item);
+      const file = extractFileDataDeep(item);
       if (file) return file;
     }
   }
@@ -286,6 +369,10 @@ function randomUploadId(): string {
   return Math.random().toString(36).slice(2, 14);
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** alex555196/videobot → https://alex555196-videobot.hf.space */
 export function resolveHfSpaceBaseUrl(raw: string): string {
   const value = raw.trim().replace(/\/+$/, '');
@@ -303,7 +390,7 @@ export function createHfSpaceVideoApi(spaceRaw: string): HfSpaceVideoApiClient {
   const pollIntervalMs = parseInt(process.env.HF_VIDEO_POLL_INTERVAL_MS || '3000', 10);
   const width = parseInt(process.env.HF_VIDEO_WIDTH || '768', 10);
   const height = parseInt(process.env.HF_VIDEO_HEIGHT || '448', 10);
-  const numFrames = parseInt(process.env.HF_VIDEO_FRAMES || '49', 10);
+  const numFrames = parseInt(process.env.HF_VIDEO_FRAMES || '25', 10);
   const seed = parseInt(process.env.HF_VIDEO_SEED || '42', 10);
   const negativePrompt =
     process.env.HF_VIDEO_NEGATIVE_PROMPT?.trim() ||
