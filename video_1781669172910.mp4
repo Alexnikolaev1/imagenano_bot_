@@ -1,0 +1,131 @@
+<!doctype html>
+<html
+	lang="en"
+	style="
+		margin: 0;
+		padding: 0;
+		min-height: 100%;
+		display: flex;
+		flex-direction: column;
+	"
+>
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script data-gradio-mode>
+			window.__gradio_mode__ = "app";
+			window.iFrameResizer = {
+				heightCalculationMethod: "taggedElement"
+			};
+			window.parent?.postMessage(
+				{ type: "SET_SCROLLING", enabled: false },
+				"*"
+			);
+		</script>
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.1/iframeResizer.contentWindow.min.js"
+			async
+		></script>
+
+		
+		<link href="./_app/immutable/assets/0.lo0snpjz.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/2.B4xepX_S.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.C0TCl1hH.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CH2uJXwy.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/DownloadLink.wTm37iHI.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/AudioPlayer.d1C6RIRD.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.DiaQHWGN.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/InteractiveAudio.DT5F_ijB.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Upload.OMSDRJHz.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.Tu0KLLdI.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/ImagePreview.sgQEmTRP.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Image.CYNaBOxE.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CgUesbFV.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.DhgyZ3dq.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.COmDoKuI.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.Cpc8zqPC.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.UAAEakYs.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.Df2gU2NX.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.s-gSAUme.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CmUF213V.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.B1wGGoq8.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CkLhqRWZ.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.C9aJa-R5.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.CniNOwBY.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/FileUpload.PW9JfUly.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.BT9hnQY6.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.5XZaptZI.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Gallery.B3HQRzuK.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Video.BS7gIGiU.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CM3Al4BG.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.A2SdUVuA.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CzWz8LC-.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.PNpjY3LI.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.BI_HSbIA.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/ImageUploader.rBPXgEQK.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.q-HzhiHp.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.BAPDpZMe.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.HGSBPzJx.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CCTfp4s0.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.2gNKIPgc.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.Bn2wKUfz.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.6livfLEN.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.BqxQl2e6.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.I_mWlOg0.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.ChNDsf5c.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.Begqs96B.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/BokehPlot.DX04T7W4.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/AltairPlot.O7q90H0e.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/MatplotlibPlot.BHPTlvkw.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.C6i0F1KT.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.DkCAkcCn.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.aP12nkUD.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.C9PV3Ok0.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Tabs.ColxKYED.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.CzHwIWu3.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/VideoPreview.D43CLM8T.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Example.DhjYx34x.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/index.CY9spOiQ.css" rel="stylesheet">
+		<link href="./_app/immutable/assets/Index.DFgZ7vPU.css" rel="stylesheet"><title>LTX-Video API</title><!-- HEAD_svelte-1ilxmzf_START --><link rel="stylesheet" href="./theme.css?v=63194d3741d384f9f85db890247b6c0ef9e7abac0f297f40a15c59fe4baba916"><link rel="manifest" href="/manifest.json"><!-- HEAD_svelte-1ilxmzf_END --><!-- HEAD_svelte-eiigye_START --><!-- HEAD_svelte-eiigye_END -->
+	</head>
+	<body
+		data-sveltekit-preload-data="hover"
+		style="
+			width: 100%;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+		"
+	>
+		<div style="display: contents">   <div class="gradio-container gradio-container-5-13-0 svelte-1gwiqys app" data-iframe-height style="min-height: initial; flex-grow: 1;"><div class="main svelte-1gwiqys"> <div class="wrap svelte-sar7eh" style="min-height: 100%;"><div class="contain svelte-sar7eh" style="flex-grow: 1;">   <div id="component-0" class="column  svelte-vt1mxs gap" style="min-width: calc(min(0px, 100%));">    <div id="component-1" class="block  svelte-11xb1hd  padded    hide-container auto-margin" style="border-style: solid; overflow: auto; min-width: calc(min(0px, 100%)); border-width: var(--block-border-width);"><div class="wrap center full svelte-ls20lj hide" style="position: absolute; padding: 0;"> </div> <div class="svelte-1ed2p3z"><div class="prose  svelte-lag733" data-testid="markdown" dir="ltr"> <span class="md svelte-7ddecg  prose"><!-- HTML_TAG_START --><h2>LTX-Video 0.9.7 Distilled · Стабильный Цвет Без Артефактов</h2>
+<!-- HTML_TAG_END --> </span> </div></div>  </div>    <div id="component-2" class="row  svelte-1xp0cw7   unequal-height">    <div id="component-3" class="column  svelte-vt1mxs gap" style="flex-grow: 1; min-width: calc(min(320px, 100%));">    <div class="form svelte-633qhp" style="min-width: calc(min(0px, 100%));">      <div id="component-4" class="block  svelte-11xb1hd  padded     auto-margin" style="border-style: solid; overflow: hidden; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);">  <label class="svelte-173056l container show_textbox_border"> <span data-testid="block-info" class="svelte-1gfkn6j">Prompt</span>  <div class="input-container svelte-173056l"><textarea data-testid="textbox" class="scroll-hide svelte-173056l" dir="ltr" placeholder="" rows="3"   style=""></textarea>  </div> </label>  </div>       <div id="component-5" class="block  svelte-11xb1hd  padded     auto-margin" style="border-style: solid; overflow: hidden; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);">  <label class="svelte-173056l container show_textbox_border"> <span data-testid="block-info" class="svelte-1gfkn6j">Negative prompt</span>  <div class="input-container svelte-173056l"><textarea data-testid="textbox" class="scroll-hide svelte-173056l" dir="ltr" placeholder="" rows="1"   style="">worst quality, inconsistent motion, blurry, jittery, distorted, deformed, low quality, noise</textarea>  </div> </label>  </div>       <div id="component-6" class="block  svelte-11xb1hd  padded     auto-margin" style="border-style: solid; overflow: hidden; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);">  <label class="svelte-173056l container show_textbox_border"> <span data-testid="block-info" class="svelte-1gfkn6j">Image URL (optional)</span>  <div class="input-container svelte-173056l"><textarea data-testid="textbox" class="scroll-hide svelte-173056l" dir="ltr" placeholder="https://..." rows="1"   style=""></textarea>  </div> </label>  </div>  </div>    <div id="component-7" class="row  svelte-1xp0cw7   unequal-height">    <div class="form svelte-633qhp" style="flex-grow: 2; min-width: calc(min(320px, 100%));">    <div id="component-8" class="block  svelte-11xb1hd  padded     auto-margin" style="border-style: solid; overflow: auto; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);"><div class="wrap default full svelte-ls20lj hide" style="position: absolute; padding: 0;"> </div> <div class="wrap svelte-10lj3xl"><div class="head svelte-10lj3xl"><label for="range_id_21"><span data-testid="block-info" class="svelte-1gfkn6j">Width</span> </label> <div class="tab-like-container svelte-10lj3xl"><input aria-label="number input for Width" data-testid="number-input" type="number" min="256" max="1024" step="32"  class="svelte-10lj3xl" value="512"> <button class="reset-button svelte-10lj3xl"  aria-label="Reset to default value" data-testid="reset-button">↺</button></div></div> <div class="slider_input_container svelte-10lj3xl"><span class="min_value svelte-10lj3xl">256</span> <input type="range" id="range_id_21" name="cowbell" min="256" max="1024" step="32"  aria-label="range slider for Width" class="svelte-10lj3xl" value="512"> <span class="max_value svelte-10lj3xl">1024</span></div></div>  </div>     <div id="component-9" class="block  svelte-11xb1hd  padded     auto-margin" style="border-style: solid; overflow: auto; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);"><div class="wrap default full svelte-ls20lj hide" style="position: absolute; padding: 0;"> </div> <div class="wrap svelte-10lj3xl"><div class="head svelte-10lj3xl"><label for="range_id_22"><span data-testid="block-info" class="svelte-1gfkn6j">Height</span> </label> <div class="tab-like-container svelte-10lj3xl"><input aria-label="number input for Height" data-testid="number-input" type="number" min="256" max="768" step="32"  class="svelte-10lj3xl" value="384"> <button class="reset-button svelte-10lj3xl"  aria-label="Reset to default value" data-testid="reset-button">↺</button></div></div> <div class="slider_input_container svelte-10lj3xl"><span class="min_value svelte-10lj3xl">256</span> <input type="range" id="range_id_22" name="cowbell" min="256" max="768" step="32"  aria-label="range slider for Height" class="svelte-10lj3xl" value="384"> <span class="max_value svelte-10lj3xl">768</span></div></div>  </div>  </div>  </div>    <div class="form svelte-633qhp" style="min-width: calc(min(0px, 100%));">    <div id="component-11" class="block  svelte-11xb1hd  padded     auto-margin" style="border-style: solid; overflow: auto; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);"><div class="wrap default full svelte-ls20lj hide" style="position: absolute; padding: 0;"> </div> <div class="wrap svelte-10lj3xl"><div class="head svelte-10lj3xl"><label for="range_id_23"><span data-testid="block-info" class="svelte-1gfkn6j">Frames</span> </label> <div class="tab-like-container svelte-10lj3xl"><input aria-label="number input for Frames" data-testid="number-input" type="number" min="25" max="257" step="8"  class="svelte-10lj3xl" value="41"> <button class="reset-button svelte-10lj3xl"  aria-label="Reset to default value" data-testid="reset-button">↺</button></div></div> <div class="slider_input_container svelte-10lj3xl"><span class="min_value svelte-10lj3xl">25</span> <input type="range" id="range_id_23" name="cowbell" min="25" max="257" step="8"  aria-label="range slider for Frames" class="svelte-10lj3xl" value="41"> <span class="max_value svelte-10lj3xl">257</span></div></div>  </div>    <div id="component-12" class="block  svelte-11xb1hd  padded     auto-margin" style="border-style: solid; overflow: hidden; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);"><div class="wrap default full svelte-ls20lj hide" style="position: absolute; padding: 0;"> </div> <label class="block svelte-7ha85a container"><span data-testid="block-info" class="svelte-1gfkn6j">Seed</span>  <input aria-label="Seed" type="number" step="1"  class="svelte-7ha85a" value="42"></label>  </div>  </div>    <button class="lg primary  svelte-5st68j" id="component-13" > Generate 🎬</button>  </div>    <div id="component-16" class="column  svelte-vt1mxs gap" style="flex-grow: 1; min-width: calc(min(320px, 100%));">       <div id="component-17" class="block  svelte-11xb1hd       auto-margin" style="border-style: dashed; overflow: hidden; min-width: calc(min(160px, 100%)); border-width: var(--block-border-width);"><div class="wrap default full svelte-ls20lj hide" style="position: absolute; padding: 0;"> </div> <label for="" data-testid="block-label" class="svelte-i3tvor   float"><span class="svelte-i3tvor"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></span> Result (.mp4) </label> <div class="empty svelte-1oiin9d  large unpadded_box" aria-label="Empty value"><div class="icon svelte-1oiin9d"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div> </div>  </div>  </div>  </div>  </div> </div> <footer class="svelte-sar7eh"><button class="show-api svelte-sar7eh">Use via API <img src="data:image/svg+xml,%3csvg%20width='28'%20height='28'%20viewBox='0%200%2028%2028'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20fill-rule='evenodd'%20clip-rule='evenodd'%20d='M26.9425%202.94265C27.4632%202.42195%2027.4632%201.57773%2026.9425%201.05703C26.4218%200.536329%2025.5776%200.536329%2025.0569%201.05703L22.5713%203.54256C21.1213%202.59333%2019.5367%202.43378%2018.1753%202.64006C16.5495%202.88638%2015.1127%203.66838%2014.3905%204.39053L12.3905%206.39053C12.1405%206.64058%2012%206.97972%2012%207.33334C12%207.68697%2012.1405%208.0261%2012.3905%208.27615L19.7239%2015.6095C20.2446%2016.1302%2021.0888%2016.1302%2021.6095%2015.6095L23.6095%2013.6095C24.3316%2012.8873%2025.1136%2011.4505%2025.36%209.82475C25.5663%208.46312%2025.4066%206.87827%2024.4571%205.42807L26.9425%202.94265Z'%20fill='%233c4555'/%3e%3cpath%20fill-rule='evenodd'%20clip-rule='evenodd'%20d='M12.276%2012.9426C12.7967%2012.4219%2012.7967%2011.5777%2012.276%2011.057C11.7553%2010.5363%2010.9111%2010.5363%2010.3904%2011.057L8.66651%2012.7809L8.27615%2012.3905C8.0261%2012.1405%207.68697%2012%207.33334%2012C6.97972%2012%206.64058%2012.1405%206.39053%2012.3905L4.39053%2014.3905C3.66838%2015.1127%202.88638%2016.5495%202.64006%2018.1753C2.43377%2019.5367%202.59333%2021.1214%203.54262%2022.5714L1.05703%2025.057C0.536329%2025.5777%200.536329%2026.4219%201.05703%2026.9426C1.57773%2027.4633%202.42195%2027.4633%202.94265%2026.9426L5.42817%2024.4571C6.87835%2025.4066%208.46315%2025.5663%209.82475%2025.36C11.4505%2025.1136%2012.8873%2024.3316%2013.6095%2023.6095L15.6095%2021.6095C16.1302%2021.0888%2016.1302%2020.2446%2015.6095%2019.7239L15.2188%2019.3332L16.9426%2017.6093C17.4633%2017.0886%2017.4633%2016.2444%2016.9426%2015.7237C16.4219%2015.203%2015.5777%2015.203%2015.057%2015.7237L13.3332%2017.4475L10.5521%2014.6665L12.276%2012.9426Z'%20fill='%23FF7C00'/%3e%3c/svg%3e" alt="logo" class="svelte-sar7eh"> <div data-svelte-h="svelte-tc9ggp"> ·</div></button> <a href="https://gradio.app" class="built-with svelte-sar7eh" target="_blank" rel="noreferrer">Built with Gradio <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20width='576'%20height='576'%20viewBox='0%200%20576%20576'%20fill='none'%3e%3cpath%20d='M287.5%20229L86%20344.5L287.5%20460L489%20344.5L287.5%20229Z'%20stroke='url(%23paint0_linear_102_7)'%20stroke-width='59'%20stroke-linejoin='round'/%3e%3cpath%20d='M287.5%20116L86%20231.5L287.5%20347L489%20231.5L287.5%20116Z'%20stroke='url(%23paint1_linear_102_7)'%20stroke-width='59'%20stroke-linejoin='round'/%3e%3cpath%20d='M86%20344L288%20229'%20stroke='url(%23paint2_linear_102_7)'%20stroke-width='59'%20stroke-linejoin='bevel'/%3e%3cdefs%3e%3clinearGradient%20id='paint0_linear_102_7'%20x1='60'%20y1='341'%20x2='429.5'%20y2='344'%20gradientUnits='userSpaceOnUse'%3e%3cstop%20stop-color='%23F9D100'/%3e%3cstop%20offset='1'%20stop-color='%23F97700'/%3e%3c/linearGradient%3e%3clinearGradient%20id='paint1_linear_102_7'%20x1='513.5'%20y1='231'%20x2='143.5'%20y2='231'%20gradientUnits='userSpaceOnUse'%3e%3cstop%20stop-color='%23F9D100'/%3e%3cstop%20offset='1'%20stop-color='%23F97700'/%3e%3c/linearGradient%3e%3clinearGradient%20id='paint2_linear_102_7'%20x1='60'%20y1='344'%20x2='428.987'%20y2='341.811'%20gradientUnits='userSpaceOnUse'%3e%3cstop%20stop-color='%23F9D100'/%3e%3cstop%20offset='1'%20stop-color='%23F97700'/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e" alt="logo" class="svelte-sar7eh"></a> <button class="settings svelte-sar7eh"><div data-svelte-h="svelte-1vxja8n">·  </div> Settings <img src="data:image/svg+xml,%3csvg%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20xmlns='http://www.w3.org/2000/svg'%3e%3c!--%20Outer%20gear%20teeth%20(gray)%20--%3e%3cpath%20d='M19.14%2012.94c.04-.3.06-.61.06-.94%200-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24%200-.43.17-.47.41l-.36%202.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47%200-.59.22L2.74%208.87c-.12.21-.08.47.12.61l2.03%201.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03%201.58c-.18.14-.23.41-.12.61l1.92%203.32c.12.22.37.29.59.22l2.39-.96c.5.38%201.03.7%201.62.94l.36%202.54c.05.24.24.41.48.41h3.84c.24%200%20.44-.17.47-.41l.36-2.54c.59-.24%201.13-.56%201.62-.94l2.39.96c.22.08.47%200%20.59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12%2015.6c-1.98%200-3.6-1.62-3.6-3.6s1.62-3.6%203.6-3.6%203.6%201.62%203.6%203.6-1.62%203.6-3.6%203.6z'%20fill='%23808080'/%3e%3c!--%20Inner%20circle%20(now%20gray)%20--%3e%3ccircle%20cx='12'%20cy='12'%20r='2.5'%20fill='%23808080'/%3e%3c/svg%3e" alt="Settings" class="svelte-sar7eh"></button></footer></div>    <div class="toast-wrap svelte-pu0yf1"> </div></div>  </div>  
+			
+			<script>
+				{
+					__sveltekit_985jpz = {
+						base: new URL(".", location).pathname.slice(0, -1)
+					};
+
+					const element = document.currentScript.parentElement;
+
+					const data = [{"type":"data","data":null,"uses":{"url":1}},{"type":"data","data":{server:"http://0.0.0.0:7860",port:"7860",local_dev_mode:void 0},"uses":{}}];
+
+					Promise.all([
+						import("./_app/immutable/entry/start.B9Jxbha4.js"),
+						import("./_app/immutable/entry/app.DP_B04f4.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element, {
+							node_ids: [0, 2],
+							data,
+							form: null,
+							error: null
+						});
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>

@@ -287,7 +287,16 @@ export async function sendVideoBase64(
   try {
     const normalized = normalizeBase64(videoBase64);
     const buffer = Buffer.from(normalized, 'base64');
-    if (buffer.length === 0) throw new Error('Decoded video buffer is empty');
+    if (buffer.length < 8_000) {
+      throw new Error(`Decoded video too small (${buffer.length} bytes)`);
+    }
+    if (buffer.length >= 8 && buffer.subarray(4, 8).toString('ascii') !== 'ftyp') {
+      logError('sendVideoBase64: buffer missing MP4 ftyp header', {
+        bytes: buffer.length,
+        head: buffer.subarray(0, 16).toString('hex'),
+      });
+      throw new Error('Decoded video is not a valid MP4');
+    }
     fs.writeFileSync(tmpPath, buffer);
 
     return await sendVideoFile(chatId, tmpPath, filename, mimeType, caption);

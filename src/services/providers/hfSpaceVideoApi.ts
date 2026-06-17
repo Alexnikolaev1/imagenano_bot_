@@ -111,38 +111,62 @@ export class HfSpaceVideoApiClient {
   }
 
   async downloadVideoOutput(output: unknown): Promise<VideoResult> {
-    const file = extractFileData(output);
+    const file = extractVideoFileData(output);
     if (!file) {
-      logWarn('HF Space output without file', { output });
+      logWarn('HF Space output without video file', { output });
       return { success: false, error: 'hf_space_no_video' };
     }
 
-    const downloadUrl =
-      file.url ||
-      (file.path ? `${this.config.baseUrl}/gradio_api/file=${encodeURIComponent(file.path)}` : undefined);
-
-    if (!downloadUrl) return { success: false, error: 'hf_space_no_video' };
-
-    const res = await fetch(downloadUrl, {
-      headers: this.authHeaders(),
-      signal: AbortSignal.timeout(45_000),
+    const candidates = buildGradioDownloadUrls(this.config.baseUrl, file);
+    logInfo('HF Space video download candidates', {
+      paths: candidates.map((u) => u.slice(0, 100)),
     });
 
-    if (!res.ok) {
-      logWarn('HF Space video download failed', { status: res.status, url: downloadUrl.slice(0, 100) });
-      return { success: false, error: 'hf_space_no_video' };
+    for (const downloadUrl of candidates) {
+      try {
+        const res = await fetch(downloadUrl, {
+          headers: this.authHeaders(),
+          signal: AbortSignal.timeout(90_000),
+        });
+
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (!res.ok) {
+          logWarn('HF Space video download HTTP error', {
+            status: res.status,
+            url: downloadUrl.slice(0, 100),
+            bytes: buf.length,
+          });
+          continue;
+        }
+
+        if (!isLikelyVideoBuffer(buf)) {
+          logWarn('HF Space video download not a valid video', {
+            url: downloadUrl.slice(0, 100),
+            bytes: buf.length,
+            head: buf.subarray(0, 16).toString('hex'),
+          });
+          continue;
+        }
+
+        logInfo('HF Space video downloaded', { bytes: buf.length, url: downloadUrl.slice(0, 100) });
+
+        const publicUrl = downloadUrl.startsWith('http') ? downloadUrl : undefined;
+        return {
+          success: true,
+          mode: 'video',
+          videoUrl: publicUrl,
+          videoBase64: buf.toString('base64'),
+          mimeType: file.mime_type || 'video/mp4',
+        };
+      } catch (err) {
+        logWarn('HF Space video download failed', {
+          url: downloadUrl.slice(0, 100),
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
 
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length === 0) return { success: false, error: 'hf_space_no_video' };
-
-    logInfo('HF Space video downloaded', { bytes: buf.length });
-    return {
-      success: true,
-      mode: 'video',
-      videoBase64: buf.toString('base64'),
-      mimeType: file.mime_type || 'video/mp4',
-    };
+    return { success: false, error: 'hf_space_no_video' };
   }
 
   /** Upload image to Space temp storage; returns a URL load_image() can fetch. */
@@ -238,7 +262,7 @@ function parsePollResponse(text: string): {
       const json = JSON.parse(trimmed) as Record<string, unknown>;
       if (json.error) return { status: 'error', error: String(json.error) };
       if (json.output !== undefined) {
-        const file = extractFileDataDeep(json.output);
+        const file = extractVideoFileDataDeep(json.output);
         if (file) return { status: 'complete', output: file };
       }
     } catch {
@@ -265,14 +289,14 @@ function parsePollResponse(text: string): {
 
     try {
       lastData = JSON.parse(payload);
-      const file = extractFileDataDeep(lastData);
+      const file = extractVideoFileDataDeep(lastData);
       if (file) return { status: 'complete', output: file };
 
       if (typeof lastData === 'object' && lastData !== null) {
         const msg = (lastData as { msg?: string }).msg;
         if (msg === 'process_completed' || msg === 'process_complete') {
           const out = (lastData as { output?: unknown }).output;
-          const outFile = extractFileDataDeep(out);
+          const outFile = extractVideoFileDataDeep(out);
           if (outFile) return { status: 'complete', output: outFile };
         }
       }
@@ -289,18 +313,19 @@ function parsePollResponse(text: string): {
       return { status: 'error', error: msg };
     }
     if (lastData[0] === 'complete' || sawCompleteEvent) {
-      const file = extractFileDataDeep(lastData[1] ?? lastData);
+      const file = extractVideoFileDataDeep(lastData[1] ?? lastData);
       if (file) return { status: 'complete', output: file };
     }
   }
 
-  const file = extractFileDataDeep(lastData);
+  const file = extractVideoFileDataDeep(lastData);
   if (file) return { status: 'complete', output: file };
 
   return { status: 'pending' };
 }
 
 function findFileDataInText(text: string): GradioFileData | null {
+  let lastVideo: GradioFileData | null = null;
   for (const line of text.split('\n')) {
     const trimmedLine = line.trim();
     let payload = trimmedLine;
@@ -310,13 +335,13 @@ function findFileDataInText(text: string): GradioFileData | null {
     if (!payload.startsWith('[') && !payload.startsWith('{')) continue;
     try {
       const json = JSON.parse(payload);
-      const file = extractFileDataDeep(json);
-      if (file) return file;
+      const file = extractVideoFileDataDeep(json);
+      if (file) lastVideo = file;
     } catch {
       continue;
     }
   }
-  return null;
+  return lastVideo;
 }
 
 interface GradioFileData {
@@ -327,6 +352,10 @@ interface GradioFileData {
 
 function extractFileData(output: unknown): GradioFileData | null {
   return extractFileDataDeep(output);
+}
+
+function extractVideoFileData(output: unknown): GradioFileData | null {
+  return extractVideoFileDataDeep(output);
 }
 
 function extractFileDataDeep(output: unknown): GradioFileData | null {
@@ -344,6 +373,65 @@ function extractFileDataDeep(output: unknown): GradioFileData | null {
     }
   }
   return null;
+}
+
+function extractVideoFileDataDeep(output: unknown): GradioFileData | null {
+  if (!output) return null;
+  if (typeof output === 'object' && !Array.isArray(output)) {
+    const obj = output as GradioFileData & { data?: unknown; output?: unknown };
+    if ((obj.path || obj.url) && isVideoFileMeta(obj)) {
+      return { path: obj.path, url: obj.url, mime_type: obj.mime_type };
+    }
+    const nested = extractVideoFileDataDeep(obj.data) ?? extractVideoFileDataDeep(obj.output);
+    if (nested) return nested;
+  }
+  if (Array.isArray(output)) {
+    for (let i = output.length - 1; i >= 0; i--) {
+      const file = extractVideoFileDataDeep(output[i]);
+      if (file) return file;
+    }
+  }
+  return null;
+}
+
+function isVideoFileMeta(file: GradioFileData): boolean {
+  const ref = `${file.path || ''} ${file.url || ''} ${file.mime_type || ''}`.toLowerCase();
+  if (ref.includes('.mp4') || ref.includes('.webm') || ref.includes('.mov')) return true;
+  if (file.mime_type?.startsWith('video/')) return true;
+  return false;
+}
+
+function isLikelyVideoBuffer(buf: Buffer): boolean {
+  if (buf.length < 8_000) return false;
+  if (buf.length >= 8 && buf.subarray(4, 8).toString('ascii') === 'ftyp') return true;
+  if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return true;
+  return false;
+}
+
+function buildGradioDownloadUrls(baseUrl: string, file: GradioFileData): string[] {
+  const base = baseUrl.replace(/\/+$/, '');
+  const urls: string[] = [];
+
+  if (file.url) {
+    if (file.url.startsWith('http://') || file.url.startsWith('https://')) {
+      urls.push(file.url);
+    } else {
+      urls.push(`${base}${file.url.startsWith('/') ? '' : '/'}${file.url}`);
+    }
+  }
+
+  if (file.path) {
+    const path = file.path;
+    const encoded = encodeURIComponent(path);
+    urls.push(`${base}/file=${encoded}`);
+    urls.push(`${base}/gradio_api/file=${encoded}`);
+    if (path.startsWith('/')) {
+      urls.push(`${base}/file=${path}`);
+      urls.push(`${base}/gradio_api/file=${path}`);
+    }
+  }
+
+  return [...new Set(urls.filter(Boolean))];
 }
 
 function extractUploadedPath(paths: unknown): string | undefined {

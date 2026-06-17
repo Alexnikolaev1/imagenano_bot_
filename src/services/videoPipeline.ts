@@ -143,10 +143,17 @@ export async function deliverVideoResult(
 
   await editMessage(chatId, statusMessageId, t('videoDoneSending', { seconds: String(elapsed) }));
   logInfo('Sending mp4 video to Telegram', { userId, provider: videoService.provider });
-  if (result.videoBase64) {
+
+  if (result.videoUrl) {
+    try {
+      await sendVideo(chatId, result.videoUrl, caption);
+    } catch (urlErr) {
+      logError('sendVideo by URL failed, falling back to upload', urlErr);
+      if (!result.videoBase64) throw urlErr;
+      await sendVideoBase64(chatId, result.videoBase64, result.mimeType || 'video/mp4', caption);
+    }
+  } else if (result.videoBase64) {
     await sendVideoBase64(chatId, result.videoBase64, result.mimeType || 'video/mp4', caption);
-  } else {
-    await sendVideo(chatId, result.videoUrl!, caption);
   }
   await editMessage(chatId, statusMessageId, t('videoSent'));
 }
